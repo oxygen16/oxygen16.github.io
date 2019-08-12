@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://oxygen16.github.io</id>
-    <title>Gridea</title>
-    <updated>2019-08-12T07:35:41.660Z</updated>
+    <title>oxygen16</title>
+    <updated>2019-08-12T07:55:43.637Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://oxygen16.github.io"/>
     <link rel="self" href="https://oxygen16.github.io/atom.xml"/>
-    <subtitle>温故而知新</subtitle>
+    <subtitle>code is cheap.</subtitle>
     <logo>https://oxygen16.github.io/images/avatar.png</logo>
     <icon>https://oxygen16.github.io/favicon.ico</icon>
-    <rights>All rights reserved 2019, Gridea</rights>
+    <rights>All rights reserved 2019, oxygen16</rights>
     <entry>
         <title type="html"><![CDATA[Hello Gridea]]></title>
         <id>https://oxygen16.github.io/post/hello-gridea</id>
