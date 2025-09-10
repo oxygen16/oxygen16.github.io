@@ -123,6 +123,28 @@
             background-color: #8e44ad;
         }
         
+        .nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .nav-link {
+            display: inline-block;
+            padding: 8px 14px;
+            border-radius: 20px;
+            border: 1px solid #3498db;
+            color: #3498db;
+            background-color: #fff;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        
+        .nav-link:hover {
+            background-color: #e8f4fc;
+        }
+        
         .result {
             margin-top: 15px;
             padding: 12px;
@@ -409,9 +431,14 @@
 <body>
     <div class="container">
         <h1>地址缩短工具</h1>
+        <div class="nav">
+            <a href="#section-pdd" class="nav-link">拼多多</a>
+            <a href="#section-dy" class="nav-link">抖音</a>
+            <a href="#section-tb" class="nav-link">淘宝</a>
+        </div>
         
         <!-- 拼多多地址缩短部分 -->
-        <div class="section">
+        <div class="section" id="section-pdd">
             <h2 class="section-title">拼多多地址缩短（批量）</h2>
             <div class="input-group">
                 <label for="pdd-input">输入拼多多地址（每条地址3行，多条地址连续输入）：</label>
@@ -452,7 +479,7 @@
         </div>
         
         <!-- 淘宝地址缩短部分 -->
-        <div class="section">
+        <div class="section" id="section-tb">
             <h2 class="section-title">淘宝地址缩短（批量）</h2>
             <div class="input-group">
                 <label for="tb-input">输入淘宝地址（每行一条地址）：</label>
@@ -494,7 +521,7 @@
     </div>
     
     <!-- 抖音地址缩短部分 -->
-    <div class="section">
+    <div class="section" id="section-dy">
         <h2 class="section-title">抖音地址缩短（批量）</h2>
         <div class="input-group">
             <label for="dy-input">输入抖音地址（每行一条：姓名，电话[-后四位]，地址）：</label>
@@ -632,6 +659,20 @@
             };
             return run().finally(finalize);
         }
+
+        // 平滑滚动到锚点（提高导航体验）
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                const href = this.getAttribute('href');
+                if (href && href.startsWith('#')) {
+                    e.preventDefault();
+                    const target = document.querySelector(href);
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }
+            });
+        });
         
         // 产品选项配置
         const productOptions = [
