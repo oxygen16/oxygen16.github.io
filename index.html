@@ -124,10 +124,16 @@
         }
         
         .nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
             margin-bottom: 20px;
+            background-color: #fff;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
         }
         
         .nav-link {
@@ -431,7 +437,7 @@
 <body>
     <div class="container">
         <h1>地址缩短工具</h1>
-        <div class="nav">
+        <div class="nav" id="top-nav">
             <a href="#section-pdd" class="nav-link">拼多多</a>
             <a href="#section-dy" class="nav-link">抖音</a>
             <a href="#section-tb" class="nav-link">淘宝</a>
@@ -518,10 +524,8 @@
                 <div id="tb-table-container"></div>
             </div>
         </div>
-    </div>
-    
-    <!-- 抖音地址缩短部分 -->
-    <div class="section" id="section-dy">
+        <!-- 抖音地址缩短部分 -->
+        <div class="section" id="section-dy">
         <h2 class="section-title">抖音地址缩短（批量）</h2>
         <div class="input-group">
             <label for="dy-input">输入抖音地址（每行一条：姓名，电话[-后四位]，地址）：</label>
@@ -559,7 +563,7 @@
             <div class="table-preview-title">表格预览：</div>
             <div id="dy-table-container"></div>
         </div>
-    </div>
+        </div>
     
     <!-- 打印容器（用于生成图片和PDF） -->
     <div id="print-container" class="print-container">
