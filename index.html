@@ -493,6 +493,47 @@
         </div>
     </div>
     
+    <!-- 抖音地址缩短部分 -->
+    <div class="section">
+        <h2 class="section-title">抖音地址缩短（批量）</h2>
+        <div class="input-group">
+            <label for="dy-input">输入抖音地址（每行一条：姓名，电话[-后四位]，地址）：</label>
+            <textarea id="dy-input" placeholder="例如：&#10;高先生，15782103569-9142，新疆维吾尔自治区 喀什地区 麦盖提县 麦盖提镇 巴扎结米路麦盖提镇刀郎社区幸福小区&#10;张三，13800001234，浙江省 杭州市 西湖区 XX路100号"></textarea>
+            <div class="example">示例：<br>姓名，电话[-后四位]，地址</div>
+            <div class="batch-info">支持批量处理，每行一条</div>
+        </div>
+        
+        <button id="dy-btn">缩短地址</button>
+        <button id="dy-copy" class="copy-btn">复制结果</button>
+        
+        <div id="dy-result" class="result">
+            <div class="result-title">缩短后的地址：</div>
+            <div id="dy-output" class="result-content"></div>
+            
+            <div class="order-section" id="dy-order-section" style="display: none;">
+                <div class="order-title">为每个地址添加订单信息</div>
+                <button id="dy-add-order-btn" class="add-order-btn">添加订单信息</button>
+                <button id="dy-generate-final-btn" class="generate-final-btn">生成最终结果</button>
+                
+                <div id="dy-address-list" class="address-list"></div>
+            </div>
+        </div>
+        
+        <div id="dy-final-result" class="final-result">
+            <div class="final-result-title">最终结果（地址+订单信息）：</div>
+            <div id="dy-final-output" class="result-content"></div>
+            <button id="dy-final-copy" class="copy-btn">复制最终结果</button>
+            <button id="dy-export-table" class="export-btn">导出表格</button>
+            <button id="dy-export-image" class="image-btn">导出图片</button>
+            <button id="dy-export-pdf" class="pdf-btn">导出PDF</button>
+        </div>
+        
+        <div id="dy-table-preview" class="table-preview">
+            <div class="table-preview-title">表格预览：</div>
+            <div id="dy-table-container"></div>
+        </div>
+    </div>
+    
     <!-- 打印容器（用于生成图片和PDF） -->
     <div id="print-container" class="print-container">
         <div class="print-title" id="print-title"></div>
@@ -512,7 +553,7 @@
             const table = document.createElement('table');
             const thead = document.createElement('thead');
             const trHead = document.createElement('tr');
-            const headers = ['序号', '缩短地址', '订单信息', '完整结果'];
+            const headers = ['序号', '最终结果'];
             headers.forEach(h => {
                 const th = document.createElement('th');
                 th.textContent = h;
@@ -524,8 +565,6 @@
                 const tr = document.createElement('tr');
                 const cells = [
                     String(index + 1),
-                    item.shortAddress || '',
-                    item.orderInfo || '',
                     item.fullResult || ''
                 ];
                 cells.forEach(text => {
@@ -544,7 +583,7 @@
             element.innerHTML = '';
             const thead = document.createElement('thead');
             const trHead = document.createElement('tr');
-            const headers = ['序号', '缩短地址', '订单信息', '完整结果'];
+            const headers = ['序号', '最终结果'];
             headers.forEach(h => {
                 const th = document.createElement('th');
                 th.textContent = h;
@@ -556,8 +595,6 @@
                 const tr = document.createElement('tr');
                 const cells = [
                     String(index + 1),
-                    item.shortAddress || '',
-                    item.orderInfo || '',
                     item.fullResult || ''
                 ];
                 cells.forEach(text => {
@@ -739,6 +776,71 @@
             finalResultDiv.style.display = 'none';
             tablePreviewDiv.style.display = 'none';
         });
+
+        // 抖音地址缩短功能（每行：姓名，电话[-后四位]，地址）
+        document.getElementById('dy-btn').addEventListener('click', function() {
+            const input = document.getElementById('dy-input').value.trim();
+            const resultDiv = document.getElementById('dy-result');
+            const outputDiv = document.getElementById('dy-output');
+            const orderSection = document.getElementById('dy-order-section');
+            const finalResultDiv = document.getElementById('dy-final-result');
+            const tablePreviewDiv = document.getElementById('dy-table-preview');
+            
+            if (!input) {
+                alert('请输入抖音地址');
+                return;
+            }
+            
+            const lines = input.split('\n').filter(line => line.trim() !== '');
+            const results = [];
+            
+            for (const rawLine of lines) {
+                const line = rawLine.replace(/，/g, ',');
+                const parts = line.split(',').map(p => p.trim()).filter(Boolean);
+                if (parts.length < 2) continue;
+                
+                // 期望顺序：姓名, 电话[-后四位], 地址...
+                const namePart = parts[0];
+                const phonePart = parts[1] || '';
+                const addressPart = parts.slice(2).join(',');
+                
+                let phoneSuffix = '';
+                let phoneNumber = phonePart;
+                if (phoneNumber) {
+                    const hyphenParts = phoneNumber.split('-');
+                    if (hyphenParts.length >= 2) {
+                        phoneSuffix = '-' + hyphenParts[1];
+                        phoneNumber = hyphenParts[0];
+                    } else {
+                        phoneSuffix = '-' + (phoneNumber.length >= 4 ? phoneNumber.slice(-4) : phoneNumber);
+                    }
+                }
+                
+                results.push({
+                    shortAddress: namePart + phoneSuffix,
+                    originalName: namePart,
+                    phone: phoneNumber,
+                    address: addressPart
+                });
+            }
+            
+            if (results.length === 0) {
+                outputDiv.textContent = '无法提取信息，请检查输入格式';
+                orderSection.style.display = 'none';
+            } else {
+                outputDiv.textContent = results.map(item => item.shortAddress).join('\n');
+                orderSection.style.display = 'block';
+                document.getElementById('dy-output').dataset.fullData = JSON.stringify(results);
+                document.getElementById('dy-address-list').innerHTML = '';
+                results.forEach((addressData, index) => {
+                    addAddressItem(addressData.shortAddress, index, 'dy');
+                });
+            }
+            
+            resultDiv.style.display = 'block';
+            finalResultDiv.style.display = 'none';
+            tablePreviewDiv.style.display = 'none';
+        });
         
         // 添加地址项
         function addAddressItem(address, index, platform) {
@@ -807,6 +909,11 @@
             addOrderInfoForPlatform('tb');
         });
         
+        // 添加订单信息按钮 - 抖音
+        document.getElementById('dy-add-order-btn').addEventListener('click', function() {
+            addOrderInfoForPlatform('dy');
+        });
+        
         // 为平台添加订单信息（修复数量输入框定位）
         function addOrderInfoForPlatform(platform) {
             const addressItems = document.querySelectorAll(`#${platform}-address-list .address-item`);
@@ -830,6 +937,11 @@
         // 生成最终结果按钮 - 淘宝
         document.getElementById('tb-generate-final-btn').addEventListener('click', function() {
             generateFinalResultForPlatform('tb');
+        });
+        
+        // 生成最终结果按钮 - 抖音
+        document.getElementById('dy-generate-final-btn').addEventListener('click', function() {
+            generateFinalResultForPlatform('dy');
         });
         
         // 为平台生成最终结果
@@ -931,6 +1043,11 @@
             exportTableForPlatform('tb');
         });
         
+        // 导出表格功能 - 抖音
+        document.getElementById('dy-export-table').addEventListener('click', function() {
+            exportTableForPlatform('dy');
+        });
+        
         // 为平台导出表格（安全构建表格 + CSV 转义）
         function exportTableForPlatform(platform) {
             const finalOutputDiv = document.getElementById(`${platform}-final-output`);
@@ -956,12 +1073,10 @@
             
             // CSV 内容（带 BOM + 字段转义）
             let csvContent = '\ufeff';
-            csvContent += '序号,缩短地址,订单信息,完整结果\n';
+            csvContent += '序号,最终结果\n';
             data.forEach((item, index) => {
                 const row = [
                     index + 1,
-                    item.shortAddress,
-                    item.orderInfo,
                     item.fullResult
                 ].map(csvEscape).join(',');
                 csvContent += row + '\n';
@@ -971,7 +1086,7 @@
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.setAttribute('href', url);
-            link.setAttribute('download', `${platform === 'pdd' ? '拼多多' : '淘宝'}订单数据_${new Date().toISOString().slice(0, 10)}.csv`);
+            link.setAttribute('download', `${platform === 'pdd' ? '拼多多' : platform === 'tb' ? '淘宝' : '抖音'}订单数据_${new Date().toISOString().slice(0, 10)}.csv`);
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
             link.click();
@@ -986,6 +1101,11 @@
         // 导出图片功能 - 淘宝
         document.getElementById('tb-export-image').addEventListener('click', function() {
             exportImageForPlatform('tb');
+        });
+        
+        // 导出图片功能 - 抖音
+        document.getElementById('dy-export-image').addEventListener('click', function() {
+            exportImageForPlatform('dy');
         });
         
         // 为平台导出图片（渲染前临时展示打印容器）
@@ -1010,7 +1130,7 @@
             const printTable = document.getElementById('print-table');
             const printFooter = document.getElementById('print-footer');
             
-            printTitle.textContent = `${platform === 'pdd' ? '拼多多' : '淘宝'}订单数据`;
+            printTitle.textContent = `${platform === 'pdd' ? '拼多多' : platform === 'tb' ? '淘宝' : '抖音'}订单数据`;
             buildPrintTableInto(printTable, data);
             printFooter.textContent = `生成时间：${new Date().toLocaleString()}`;
             
@@ -1023,7 +1143,7 @@
                     const url = URL.createObjectURL(blob);
                     const link = document.createElement('a');
                     link.setAttribute('href', url);
-                    link.setAttribute('download', `${platform === 'pdd' ? '拼多多' : '淘宝'}订单数据_${new Date().toISOString().slice(0, 10)}.png`);
+                    link.setAttribute('download', `${platform === 'pdd' ? '拼多多' : platform === 'tb' ? '淘宝' : '抖音'}订单数据_${new Date().toISOString().slice(0, 10)}.png`);
                     link.style.visibility = 'hidden';
                     document.body.appendChild(link);
                     link.click();
@@ -1045,6 +1165,11 @@
         // 导出PDF功能 - 淘宝
         document.getElementById('tb-export-pdf').addEventListener('click', function() {
             exportPdfForPlatform('tb');
+        });
+        
+        // 导出PDF功能 - 抖音
+        document.getElementById('dy-export-pdf').addEventListener('click', function() {
+            exportPdfForPlatform('dy');
         });
         
         // 为平台导出PDF（修正分页条件）
@@ -1069,7 +1194,7 @@
             const printTable = document.getElementById('print-table');
             const printFooter = document.getElementById('print-footer');
             
-            printTitle.textContent = `${platform === 'pdd' ? '拼多多' : '淘宝'}订单数据`;
+            printTitle.textContent = `${platform === 'pdd' ? '拼多多' : platform === 'tb' ? '淘宝' : '抖音'}订单数据`;
             buildPrintTableInto(printTable, data);
             printFooter.textContent = `生成时间：${new Date().toLocaleString()}`;
             
@@ -1097,7 +1222,7 @@
                     heightLeft -= pageHeight;
                 }
                 
-                pdf.save(`${platform === 'pdd' ? '拼多多' : '淘宝'}订单数据_${new Date().toISOString().slice(0, 10)}.pdf`);
+                pdf.save(`${platform === 'pdd' ? '拼多多' : platform === 'tb' ? '淘宝' : '抖音'}订单数据_${new Date().toISOString().slice(0, 10)}.pdf`);
             }).catch(error => {
                 console.error('生成PDF失败:', error);
                 alert('生成PDF失败，请重试');
@@ -1134,6 +1259,20 @@
             }
         });
         
+        // 复制抖音结果功能
+        document.getElementById('dy-copy').addEventListener('click', function() {
+            const outputDiv = document.getElementById('dy-output');
+            if (outputDiv.textContent && outputDiv.textContent !== '无法提取信息，请检查输入格式') {
+                navigator.clipboard.writeText(outputDiv.textContent).then(function() {
+                    alert('抖音地址缩短结果已复制到剪贴板');
+                }).catch(function() {
+                    alert('复制失败，请手动复制');
+                });
+            } else {
+                alert('没有可复制的内容，请先缩短地址');
+            }
+        });
+        
         // 复制拼多多最终结果功能
         document.getElementById('pdd-final-copy').addEventListener('click', function() {
             const outputDiv = document.getElementById('pdd-final-output');
@@ -1151,6 +1290,20 @@
         // 复制淘宝最终结果功能
         document.getElementById('tb-final-copy').addEventListener('click', function() {
             const outputDiv = document.getElementById('tb-final-output');
+            if (outputDiv.textContent) {
+                navigator.clipboard.writeText(outputDiv.textContent).then(function() {
+                    alert('最终结果已复制到剪贴板');
+                }).catch(function() {
+                    alert('复制失败，请手动复制');
+                });
+            } else {
+                alert('没有可复制的内容，请先生成最终结果');
+            }
+        });
+        
+        // 复制抖音最终结果功能
+        document.getElementById('dy-final-copy').addEventListener('click', function() {
+            const outputDiv = document.getElementById('dy-final-output');
             if (outputDiv.textContent) {
                 navigator.clipboard.writeText(outputDiv.textContent).then(function() {
                     alert('最终结果已复制到剪贴板');
