@@ -47,57 +47,26 @@
             font-weight: 700;
         }
         
-        .nav {
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-bottom: 30px;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 15px 20px;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        }
-        
-        .nav-link {
-            display: inline-block;
-            padding: 12px 20px;
-            border-radius: 25px;
-            border: 2px solid transparent;
-            color: #667eea;
-            background: linear-gradient(135deg, #f8f9ff 0%, #e8f2ff 100%);
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .nav-link:hover {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        .cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
         }
         
         .section {
-            margin-bottom: 40px;
-            border: 1px solid rgba(102, 126, 234, 0.1);
-            border-radius: 16px;
-            padding: 30px;
             background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
-            box-shadow: 0 8px 32px rgba(102, 126, 234, 0.08);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.1);
             transition: all 0.3s ease;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+            height: fit-content;
         }
         
         .section:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 40px rgba(102, 126, 234, 0.15);
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.2);
         }
         
         .section-title {
@@ -462,14 +431,10 @@
 <body>
     <div class="container">
         <h1>智能地址订单管理系统</h1>
-        <div class="nav" id="top-nav">
-            <a href="#section-pdd" class="nav-link">拼多多</a>
-            <a href="#section-dy" class="nav-link">抖音</a>
-            <a href="#section-tb" class="nav-link">淘宝</a>
-        </div>
         
-        <!-- 拼多多地址订单管理 -->
-        <div class="section" id="section-pdd">
+        <div class="cards-container">
+            <!-- 拼多多地址订单管理 -->
+            <div class="section" id="section-pdd">
             <h2 class="section-title">拼多多地址订单管理</h2>
             <div class="input-group">
                 <label for="pdd-input">输入拼多多地址（每条地址3行，多条地址连续输入）：</label>
@@ -508,9 +473,9 @@
                 <div id="pdd-table-container"></div>
             </div>
         </div>
-        
-        <!-- 抖音地址订单管理 -->
-        <div class="section" id="section-dy">
+            
+            <!-- 抖音地址订单管理 -->
+            <div class="section" id="section-dy">
             <h2 class="section-title">抖音地址订单管理</h2>
             <div class="input-group">
                 <label for="dy-input">输入抖音地址（每行一条：姓名，电话[-后四位]，地址）：</label>
@@ -549,9 +514,9 @@
                 <div id="dy-table-container"></div>
             </div>
         </div>
-        
-        <!-- 淘宝地址订单管理 -->
-        <div class="section" id="section-tb">
+            
+            <!-- 淘宝地址订单管理 -->
+            <div class="section" id="section-tb">
             <h2 class="section-title">淘宝地址订单管理</h2>
             <div class="input-group">
                 <label for="tb-input">输入淘宝地址（每行一条地址）：</label>
@@ -589,6 +554,7 @@
                 <div class="table-preview-title">表格预览：</div>
                 <div id="tb-table-container"></div>
             </div>
+        </div>
         </div>
     </div>
     
@@ -717,19 +683,6 @@
             return run().finally(finalize);
         }
 
-        // 平滑滚动到锚点
-        document.querySelectorAll('.nav-link').forEach(link => {
-            link.addEventListener('click', function(e) {
-                const href = this.getAttribute('href');
-                if (href && href.startsWith('#')) {
-                    e.preventDefault();
-                    const target = document.querySelector(href);
-                    if (target) {
-                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
-                }
-            });
-        });
         
         // 产品选项配置
         const productOptions = [
