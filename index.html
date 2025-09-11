@@ -16,10 +16,13 @@
         
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-attachment: fixed;
             color: #333;
             line-height: 1.6;
             padding: 20px;
             min-height: 100vh;
+            height: auto;
+            overflow-x: hidden;
         }
         
         .container {
@@ -30,6 +33,7 @@
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
             padding: 40px;
             backdrop-filter: blur(10px);
+            margin-bottom: 40px;
         }
         
         h1 {
@@ -602,6 +606,32 @@
     </div>
     
     <script>
+        // 防止移动端滑动刷新
+        let startY = 0;
+        let isAtTop = false;
+        let isAtBottom = false;
+        
+        document.addEventListener('touchstart', function(e) {
+            startY = e.touches[0].clientY;
+            isAtTop = window.scrollY === 0;
+            isAtBottom = window.scrollY + window.innerHeight >= document.documentElement.scrollHeight;
+        }, { passive: true });
+        
+        document.addEventListener('touchmove', function(e) {
+            const currentY = e.touches[0].clientY;
+            const diffY = startY - currentY;
+            
+            // 防止在顶部向下滑动刷新
+            if (isAtTop && diffY < 0) {
+                e.preventDefault();
+            }
+            
+            // 防止在底部向上滑动刷新
+            if (isAtBottom && diffY > 0) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+        
         // 工具函数
         function buildTableElement(data) {
             const table = document.createElement('table');
