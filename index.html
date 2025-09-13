@@ -282,11 +282,17 @@
         }
         
         .generate-final-btn {
-            background-color: #e67e22;
+            background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+            margin-top: 20px;
+            width: 100%;
+            font-size: 18px;
+            padding: 15px 24px;
         }
         
         .generate-final-btn:hover {
-            background-color: #d35400;
+            background: linear-gradient(135deg, #d35400 0%, #c0392b 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(230, 126, 34, 0.4);
         }
         
         .final-result {
@@ -440,7 +446,7 @@
                 <label for="pdd-input">输入拼多多地址（每条地址3行，多条地址连续输入）：</label>
                 <textarea id="pdd-input" placeholder="请输入拼多多地址，例如：&#10;王凯[9989]&#10;19590448537&#10;山东省 青岛市 市南区 如东路17号[9989]&#10;杨宁&#10;17281428495&#10;福建省 三明市 泰宁县 三涧路东洲小区7号楼402，杨宁"></textarea>
                 <div class="example">示例格式：<br>王凯[9989]<br>19590448537<br>山东省 青岛市 市南区 如东路17号[9989]<br>杨宁<br>17281428495<br>福建省 三明市 泰宁县 三涧路东洲小区7号楼402，杨宁</div>
-                <div class="batch-info">支持批量处理，每条地址占3行（姓名、电话、地址）</div>
+                <div class="batch-info">支持批量处理，每条地址占3行（姓名、电话、地址）。支持分号（；）分隔的格式</div>
             </div>
             
             <button id="pdd-process-btn">处理地址并添加订单</button>
@@ -453,9 +459,10 @@
                 <div class="order-section" id="pdd-order-section" style="display: none;">
                     <div class="order-title">为每个地址添加订单信息</div>
                     <button id="pdd-add-order-btn" class="add-order-btn">添加订单信息</button>
-                    <button id="pdd-generate-final-btn" class="generate-final-btn">生成最终订单</button>
                     
                     <div id="pdd-address-list" class="address-list"></div>
+                    
+                    <button id="pdd-generate-final-btn" class="generate-final-btn">生成最终订单</button>
                 </div>
             </div>
             
@@ -494,9 +501,10 @@
                 <div class="order-section" id="dy-order-section" style="display: none;">
                     <div class="order-title">为每个地址添加订单信息</div>
                     <button id="dy-add-order-btn" class="add-order-btn">添加订单信息</button>
-                    <button id="dy-generate-final-btn" class="generate-final-btn">生成最终订单</button>
                     
                     <div id="dy-address-list" class="address-list"></div>
+                    
+                    <button id="dy-generate-final-btn" class="generate-final-btn">生成最终订单</button>
                 </div>
             </div>
             
@@ -535,9 +543,10 @@
                 <div class="order-section" id="tb-order-section" style="display: none;">
                     <div class="order-title">为每个地址添加订单信息</div>
                     <button id="tb-add-order-btn" class="add-order-btn">添加订单信息</button>
-                    <button id="tb-generate-final-btn" class="generate-final-btn">生成最终订单</button>
                     
                     <div id="tb-address-list" class="address-list"></div>
+                    
+                    <button id="tb-generate-final-btn" class="generate-final-btn">生成最终订单</button>
                 </div>
             </div>
             
@@ -711,17 +720,30 @@
             let results = [];
             
             if (platform === 'pdd') {
-                // 拼多多处理逻辑
-                const lines = input.split('\n').filter(line => line.trim() !== '');
+                // 拼多多处理逻辑 - 支持分号分隔的格式
+                let processedInput = input;
+                
+                // 处理分号分隔的格式
+                if (input.includes('；')) {
+                    // 将分号替换为换行符，并清理多余的换行
+                    processedInput = input.replace(/；\s*/g, '\n').replace(/\n+/g, '\n').trim();
+                }
+                
+                const lines = processedInput.split('\n').filter(line => line.trim() !== '');
+                
+                // 检查行数是否为3的倍数
                 if (lines.length % 3 !== 0) {
-                    alert('输入的总行数应为3的倍数（姓名、电话、地址）。请检查后重试。');
+                    alert(`输入的总行数应为3的倍数（姓名、电话、地址）。当前行数：${lines.length}。请检查后重试。`);
                     return;
                 }
                 
                 for (let i = 0; i < lines.length; i += 3) {
-                    const nameLine = lines[i].trim();
-                    const phoneLine = lines[i + 1].trim();
-                    const addressLine = lines[i + 2].trim();
+                    let nameLine = lines[i].trim();
+                    let phoneLine = lines[i + 1].trim();
+                    let addressLine = lines[i + 2].trim();
+                    
+                    // 清理地址中的多余分号和编号
+                    addressLine = addressLine.replace(/；\s*$/, '').replace(/\[\d+\]；\s*$/, '').trim();
                     
                     if (nameLine.includes('[') && nameLine.includes(']')) {
                         results.push({
@@ -990,7 +1012,8 @@
             }
             
             if (groups['礼品袋'].length > 0) {
-                orderParts.push('礼品袋');
+                const giftBagParts = groups['礼品袋'].map(product => `${product.name}*${product.quantity}`);
+                orderParts.push(`礼品袋【${giftBagParts.join('+')}】`);
             }
             
             return orderParts.join('+');
