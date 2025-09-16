@@ -1,0 +1,274 @@
+/* 智能地址订单管理系统 - Bootstrap版本样式文件 */
+
+:root {
+    --bs-primary-rgb: 102, 126, 234;
+    --custom-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --custom-gradient-light: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+}
+
+body {
+    background: white;
+    background-image: 
+        linear-gradient(to right, rgba(71,85,105,0.3) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(71,85,105,0.3) 1px, transparent 1px),
+        radial-gradient(circle at 50% 50%, rgba(139,92,246,0.25) 0%, rgba(139,92,246,0.1) 40%, transparent 80%);
+    background-size: 32px 32px, 32px 32px, 100% 100%;
+    background-position: 0 0, 0 0, center center;
+    font-family: 'Microsoft YaHei', Arial, sans-serif;
+    min-height: 100vh;
+}
+
+.main-container {
+    background-color: rgba(255, 255, 255, 0.95);
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    margin: 20px auto;
+    max-width: 1400px;
+}
+
+.main-title {
+    background: var(--custom-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
+    text-align: center;
+}
+
+.platform-card {
+    background: var(--custom-gradient-light);
+    border: 1px solid rgba(102, 126, 234, 0.1);
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.1);
+    transition: all 0.3s ease;
+    height: fit-content;
+}
+
+.platform-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(102, 126, 234, 0.2);
+}
+
+.platform-title {
+    background: var(--custom-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 600;
+    border-bottom: 3px solid transparent;
+    border-image: var(--custom-gradient) 1;
+    padding-bottom: 12px;
+}
+
+/* 按钮样式 */
+.btn-primary {
+    background: var(--custom-gradient);
+    border: none;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background: var(--custom-gradient);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+    border: none;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    border: none;
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, #f39c12 0%, #d68910 100%);
+    border: none;
+}
+
+.btn-purple {
+    background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+    border: none;
+    color: white;
+}
+
+.btn-orange {
+    background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+    border: none;
+    color: white;
+}
+
+/* 结果区域样式 */
+.result-area {
+    background-color: #e8f4fc;
+    border-left: 4px solid #3498db;
+    border-radius: 8px;
+}
+
+.result-content {
+    background-color: rgba(102, 126, 234, 0.05);
+    border-radius: 8px;
+    white-space: pre-line;
+    word-break: break-all;
+    line-height: 1.8;
+}
+
+.order-section {
+    background-color: #f0f7ff;
+    border: 1px dashed #3498db;
+    border-radius: 12px;
+}
+
+/* 地址项样式 */
+.address-item {
+    background-color: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.address-item:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.address-order-option {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+}
+
+.address-order-option:hover {
+    background-color: #e9ecef;
+}
+
+.address-quantity {
+    width: 50px;
+    font-size: 12px;
+}
+
+/* 最终结果样式 */
+.final-result {
+    background: linear-gradient(135deg, #fff9e6 0%, #fff5e6 100%);
+    border-left: 4px solid #e67e22;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(230, 126, 34, 0.1);
+}
+
+/* 表格预览样式 */
+.table-preview {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-left: 4px solid #6c757d;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(108, 117, 125, 0.1);
+}
+
+/* 打印样式 */
+.print-container {
+    display: none;
+    background-color: white;
+    padding: 30px;
+    font-family: 'Microsoft YaHei', Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #000;
+}
+
+.print-title {
+    text-align: center;
+    font-size: 28px;
+    font-weight: bold;
+    margin-bottom: 25px;
+    color: #2c3e50;
+}
+
+.print-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.print-table th, .print-table td {
+    border: 1px solid #333;
+    padding: 12px 15px;
+    text-align: left;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.print-table th {
+    background-color: #f5f5f5;
+    font-weight: bold;
+    color: #333;
+}
+
+.print-footer {
+    text-align: right;
+    font-size: 12px;
+    color: #666;
+    margin-top: 25px;
+}
+
+/* 加载动画样式 */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1050;
+}
+
+.spinner-border-lg {
+    width: 3rem;
+    height: 3rem;
+}
+
+/* 自定义滚动条 */
+.result-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.result-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.result-content::-webkit-scrollbar-thumb {
+    background: rgba(102, 126, 234, 0.3);
+    border-radius: 3px;
+}
+
+.result-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(102, 126, 234, 0.5);
+}
+
+/* 移动端优化 */
+@media (max-width: 768px) {
+    .main-container {
+        margin: 10px;
+        border-radius: 12px;
+    }
+    
+    .main-title {
+        font-size: 1.75rem;
+    }
+    
+    .platform-title {
+        font-size: 1.25rem;
+    }
+    
+    .address-order-options {
+        gap: 0.25rem !important;
+    }
+    
+    .address-order-option {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+}
