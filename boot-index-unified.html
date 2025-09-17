@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能地址订单管理系统 - 统一版</title>
+    
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Custom Styles -->
+    <link href="boot-styles-unified.css" rel="stylesheet">
+    <!-- External libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="main-container p-4">
+            <!-- 主标题 -->
+            <div class="text-center mb-4">
+                <h1 class="main-title display-4 mb-3">智能地址订单管理系统</h1>
+                <p class="lead text-muted">支持拼多多、抖音、淘宝三大平台地址处理</p>
+            </div>
+            
+            <!-- 平台选择器 -->
+            <div class="card platform-selector-card mb-4">
+                <div class="card-body text-center">
+                    <h5 class="card-title mb-3">选择平台</h5>
+                    <div class="platform-buttons">
+                        <button type="button" class="btn btn-platform active" data-platform="pdd">
+                            <i class="bi bi-shop"></i>
+                            <span>拼多多</span>
+                        </button>
+                        <button type="button" class="btn btn-platform" data-platform="dy">
+                            <i class="bi bi-music-note"></i>
+                            <span>抖音</span>
+                        </button>
+                        <button type="button" class="btn btn-platform" data-platform="tb">
+                            <i class="bi bi-cart"></i>
+                            <span>淘宝</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 输入区域 -->
+            <div class="card input-card mb-4">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-pencil-square me-2"></i>
+                            <span id="current-platform-name">拼多多</span>地址输入
+                        </h5>
+                        <span class="badge bg-primary" id="current-platform-badge">拼多多</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- 平台说明 -->
+                    <div class="alert alert-info" role="alert" id="platform-description">
+                        <div class="d-flex align-items-start">
+                            <i class="bi bi-info-circle me-2 mt-1"></i>
+                            <div>
+                                <div class="fw-bold" id="platform-format-title">拼多多格式说明</div>
+                                <div id="platform-format-desc">每条地址3行，多条地址连续输入</div>
+                                <div class="mt-2">
+                                    <small class="text-muted" id="platform-example">
+                                        示例：王凯[9989] → 19590448537 → 山东省 青岛市 市南区 如东路17号[9989]
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 主输入框 -->
+                    <div class="mb-3">
+                        <label for="address-input" class="form-label fw-bold">
+                            地址数据 <span class="text-danger">*</span>
+                        </label>
+                        <textarea id="address-input" 
+                                  class="form-control" 
+                                  rows="12" 
+                                  placeholder="请粘贴地址数据..."></textarea>
+                        <div class="form-text">
+                            <i class="bi bi-lightbulb text-warning me-1"></i>
+                            <span id="platform-tips">支持批量处理，每条地址占3行（姓名、电话、地址）。支持分号（；）分隔的格式</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 操作按钮 -->
+                    <div class="d-flex flex-wrap gap-2">
+                        <button id="process-btn" class="btn btn-primary btn-lg">
+                            <i class="bi bi-gear me-2"></i>处理地址
+                        </button>
+                        <button id="clear-btn" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle me-1"></i>清空
+                        </button>
+                        <button id="copy-input-btn" class="btn btn-outline-info">
+                            <i class="bi bi-clipboard me-1"></i>复制输入
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 处理结果区域 -->
+            <div id="results-section" class="card results-card mb-4 d-none">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            处理结果
+                        </h5>
+                        <div>
+                            <span class="badge bg-success" id="result-count">0</span>
+                            <span class="text-muted">条地址</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- 结果显示 -->
+                    <div class="result-display mb-3">
+                        <div id="processed-results" class="result-content"></div>
+                    </div>
+                    
+                    <!-- 结果操作按钮 -->
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <button id="copy-results-btn" class="btn btn-success">
+                            <i class="bi bi-clipboard me-1"></i>复制结果
+                        </button>
+                        <button id="add-orders-btn" class="btn btn-warning">
+                            <i class="bi bi-plus-circle me-1"></i>添加订单信息
+                        </button>
+                    </div>
+                    
+                    <!-- 订单配置区域 -->
+                    <div id="order-config-section" class="order-section d-none">
+                        <h6 class="fw-bold text-primary mb-3">
+                            <i class="bi bi-box-seam me-2"></i>订单配置
+                        </h6>
+                        <div id="address-list" class="address-list"></div>
+                        
+                        <div class="mt-3">
+                            <button id="generate-final-btn" class="btn btn-orange btn-lg w-100">
+                                <i class="bi bi-magic me-2"></i>生成最终订单
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 最终订单区域 -->
+            <div id="final-orders-section" class="card final-orders-card mb-4 d-none">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-file-text text-warning me-2"></i>
+                            最终订单
+                        </h5>
+                        <div>
+                            <span class="badge bg-warning text-dark" id="final-count">0</span>
+                            <span class="text-muted">条订单</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- 最终结果显示 -->
+                    <div class="final-result-display mb-3">
+                        <div id="final-results" class="result-content"></div>
+                    </div>
+                    
+                    <!-- 导出按钮 -->
+                    <div class="export-buttons">
+                        <div class="row g-2">
+                            <div class="col-sm-6 col-lg-3">
+                                <button id="copy-final-btn" class="btn btn-success w-100">
+                                    <i class="bi bi-clipboard me-1"></i>复制订单
+                                </button>
+                            </div>
+                            <div class="col-sm-6 col-lg-3">
+                                <button id="export-table-btn" class="btn btn-danger w-100">
+                                    <i class="bi bi-table me-1"></i>导出表格
+                                </button>
+                            </div>
+                            <div class="col-sm-6 col-lg-3">
+                                <button id="export-image-btn" class="btn btn-warning w-100">
+                                    <i class="bi bi-image me-1"></i>导出图片
+                                </button>
+                            </div>
+                            <div class="col-sm-6 col-lg-3">
+                                <button id="export-pdf-btn" class="btn btn-purple w-100">
+                                    <i class="bi bi-file-pdf me-1"></i>导出PDF
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 表格预览区域 -->
+            <div id="table-preview-section" class="card table-preview-card mb-4 d-none">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-table text-info me-2"></i>
+                        表格预览
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="table-container" class="table-responsive"></div>
+                </div>
+            </div>
+            
+            <!-- 统计信息 -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card stats-card">
+                        <div class="card-body text-center">
+                            <i class="bi bi-speedometer2 text-primary display-6"></i>
+                            <h6 class="card-title mt-2">处理统计</h6>
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <div class="stat-number" id="total-processed">0</div>
+                                    <div class="stat-label">已处理</div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="stat-number" id="total-orders">0</div>
+                                    <div class="stat-label">订单数</div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="stat-number" id="current-platform-stat">拼多多</div>
+                                    <div class="stat-label">当前平台</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card help-card">
+                        <div class="card-body text-center">
+                            <i class="bi bi-question-circle text-info display-6"></i>
+                            <h6 class="card-title mt-2">使用帮助</h6>
+                            <div class="text-start small">
+                                <p class="mb-2"><strong>1.</strong> 选择对应的电商平台</p>
+                                <p class="mb-2"><strong>2.</strong> 粘贴地址数据到输入框</p>
+                                <p class="mb-2"><strong>3.</strong> 点击"处理地址"进行解析</p>
+                                <p class="mb-0"><strong>4.</strong> 配置订单信息并导出</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 打印容器（用于生成图片和PDF） -->
+    <div id="print-container" class="print-container">
+        <div class="print-title" id="print-title"></div>
+        <table class="print-table" id="print-table"></table>
+        <div class="print-footer" id="print-footer"></div>
+    </div>
+    
+    <!-- 加载提示 -->
+    <div id="loading" class="loading-overlay d-none d-flex justify-content-center align-items-center">
+        <div class="text-center">
+            <div class="spinner-border spinner-border-lg text-light" role="status">
+                <span class="visually-hidden">加载中...</span>
+            </div>
+            <div class="text-white mt-2">正在处理，请稍候...</div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- 统一界面脚本 - 按依赖顺序加载 -->
+    <!-- 配置模块 -->
+    <script src="boot-config.js"></script>
+    <!-- 地址处理模块 -->
+    <script src="boot-address-processor.js"></script>
+    <!-- 统一界面管理器 -->
+    <script src="boot-unified-handlers.js"></script>
+    <!-- 统一界面主应用模块 -->
+    <script src="boot-unified-app.js"></script>
+</body>
+</html>

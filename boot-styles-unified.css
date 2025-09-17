@@ -1,0 +1,489 @@
+/* 智能地址订单管理系统 - 统一界面样式文件 */
+
+:root {
+    --bs-primary-rgb: 102, 126, 234;
+    --custom-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --custom-gradient-light: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+    --pdd-color: #ff6900;
+    --dy-color: #fe2c55;
+    --tb-color: #ff6600;
+}
+
+body {
+    background: white;
+    background-image: 
+        linear-gradient(to right, rgba(71,85,105,0.3) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(71,85,105,0.3) 1px, transparent 1px),
+        radial-gradient(circle at 50% 50%, rgba(139,92,246,0.25) 0%, rgba(139,92,246,0.1) 40%, transparent 80%);
+    background-size: 32px 32px, 32px 32px, 100% 100%;
+    background-position: 0 0, 0 0, center center;
+    font-family: 'Microsoft YaHei', Arial, sans-serif;
+    min-height: 100vh;
+}
+
+.main-container {
+    background-color: rgba(255, 255, 255, 0.95);
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    margin: 20px auto;
+    max-width: 1200px;
+}
+
+.main-title {
+    background: var(--custom-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
+    text-align: center;
+}
+
+/* 平台选择器样式 */
+.platform-selector-card {
+    background: var(--custom-gradient-light);
+    border: 1px solid rgba(102, 126, 234, 0.1);
+    border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.1);
+}
+
+.platform-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.btn-platform {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    background: white;
+    color: #6c757d;
+    transition: all 0.3s ease;
+    min-width: 120px;
+    text-decoration: none;
+}
+
+.btn-platform i {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.btn-platform span {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.btn-platform:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    color: #495057;
+    border-color: #dee2e6;
+}
+
+.btn-platform.active[data-platform="pdd"] {
+    background: linear-gradient(135deg, #ff6900, #ff8533);
+    border-color: var(--pdd-color);
+    color: white;
+    box-shadow: 0 4px 15px rgba(255, 105, 0, 0.3);
+}
+
+.btn-platform.active[data-platform="dy"] {
+    background: linear-gradient(135deg, #fe2c55, #ff4d6d);
+    border-color: var(--dy-color);
+    color: white;
+    box-shadow: 0 4px 15px rgba(254, 44, 85, 0.3);
+}
+
+.btn-platform.active[data-platform="tb"] {
+    background: linear-gradient(135deg, #ff6600, #ff8533);
+    border-color: var(--tb-color);
+    color: white;
+    box-shadow: 0 4px 15px rgba(255, 102, 0, 0.3);
+}
+
+/* 输入卡片样式 */
+.input-card {
+    border: 1px solid rgba(102, 126, 234, 0.1);
+    border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.1);
+    transition: all 0.3s ease;
+}
+
+.input-card:hover {
+    box-shadow: 0 12px 35px rgba(102, 126, 234, 0.15);
+}
+
+#address-input {
+    min-height: 200px;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    transition: border-color 0.3s ease;
+}
+
+#address-input:focus {
+    border-color: rgba(102, 126, 234, 0.5);
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+/* 结果卡片样式 */
+.results-card {
+    border: 1px solid rgba(40, 167, 69, 0.2);
+    border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(40, 167, 69, 0.1);
+}
+
+.final-orders-card {
+    border: 1px solid rgba(255, 193, 7, 0.2);
+    border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(255, 193, 7, 0.1);
+}
+
+.table-preview-card {
+    border: 1px solid rgba(108, 117, 125, 0.2);
+    border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(108, 117, 125, 0.1);
+}
+
+/* 结果显示区域 */
+.result-content {
+    background-color: rgba(102, 126, 234, 0.05);
+    border: 1px solid rgba(102, 126, 234, 0.1);
+    border-radius: 8px;
+    padding: 1rem;
+    white-space: pre-line;
+    word-break: break-all;
+    line-height: 1.8;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 14px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.final-result-display .result-content {
+    background-color: rgba(255, 193, 7, 0.1);
+    border-color: rgba(255, 193, 7, 0.2);
+}
+
+/* 订单配置区域 */
+.order-section {
+    background-color: #f0f7ff;
+    border: 1px dashed #3498db;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-top: 1rem;
+}
+
+.address-item {
+    background-color: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    transition: all 0.2s ease;
+}
+
+.address-item:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-color: rgba(102, 126, 234, 0.3);
+}
+
+.address-order-option {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 0.5rem;
+    margin: 0.25rem;
+    display: inline-flex;
+    align-items: center;
+    transition: background-color 0.2s ease;
+}
+
+.address-order-option:hover {
+    background-color: #e9ecef;
+}
+
+.address-quantity {
+    width: 50px;
+    font-size: 12px;
+    margin-left: 0.5rem;
+}
+
+/* 按钮样式 */
+.btn-primary {
+    background: var(--custom-gradient);
+    border: none;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background: var(--custom-gradient);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+    border: none;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    border: none;
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, #f39c12 0%, #d68910 100%);
+    border: none;
+}
+
+.btn-purple {
+    background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+    border: none;
+    color: white;
+}
+
+.btn-orange {
+    background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+    border: none;
+    color: white;
+}
+
+/* 统计卡片样式 */
+.stats-card, .help-card {
+    border: 1px solid rgba(102, 126, 234, 0.1);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.stats-card:hover, .help-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+}
+
+.stat-number {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #667eea;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* 平台特定颜色 */
+.platform-pdd {
+    --platform-color: var(--pdd-color);
+}
+
+.platform-dy {
+    --platform-color: var(--dy-color);
+}
+
+.platform-tb {
+    --platform-color: var(--tb-color);
+}
+
+.platform-badge {
+    background-color: var(--platform-color) !important;
+}
+
+/* 打印样式 */
+.print-container {
+    display: none;
+    background-color: white;
+    padding: 30px;
+    font-family: 'Microsoft YaHei', Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #000;
+}
+
+.print-title {
+    text-align: center;
+    font-size: 28px;
+    font-weight: bold;
+    margin-bottom: 25px;
+    color: #2c3e50;
+}
+
+.print-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.print-table th, .print-table td {
+    border: 1px solid #333;
+    padding: 12px 15px;
+    text-align: left;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.print-table th {
+    background-color: #f5f5f5;
+    font-weight: bold;
+    color: #333;
+}
+
+.print-footer {
+    text-align: right;
+    font-size: 12px;
+    color: #666;
+    margin-top: 25px;
+}
+
+/* 加载动画 */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1050;
+}
+
+.spinner-border-lg {
+    width: 3rem;
+    height: 3rem;
+}
+
+/* 自定义滚动条 */
+.result-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.result-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.result-content::-webkit-scrollbar-thumb {
+    background: rgba(102, 126, 234, 0.3);
+    border-radius: 3px;
+}
+
+.result-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(102, 126, 234, 0.5);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .main-container {
+        margin: 10px;
+        border-radius: 12px;
+    }
+    
+    .main-title {
+        font-size: 1.75rem;
+    }
+    
+    .platform-buttons {
+        gap: 0.5rem;
+    }
+    
+    .btn-platform {
+        min-width: 90px;
+        padding: 0.75rem 1rem;
+    }
+    
+    .btn-platform i {
+        font-size: 1.2rem;
+    }
+    
+    .btn-platform span {
+        font-size: 0.8rem;
+    }
+    
+    #address-input {
+        min-height: 150px;
+        font-size: 13px;
+    }
+    
+    .address-order-option {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        margin: 0.125rem;
+    }
+    
+    .export-buttons .btn {
+        font-size: 0.8rem;
+        padding: 0.5rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .platform-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .btn-platform {
+        width: 100%;
+        max-width: 200px;
+    }
+    
+    .export-buttons .col-sm-6 {
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.slide-in {
+    animation: slideIn 0.3s ease-out;
+}
+
+/* 成功状态指示 */
+.success-indicator {
+    border-left: 4px solid #28a745;
+    background-color: rgba(40, 167, 69, 0.1);
+}
+
+.warning-indicator {
+    border-left: 4px solid #ffc107;
+    background-color: rgba(255, 193, 7, 0.1);
+}
+
+.info-indicator {
+    border-left: 4px solid #17a2b8;
+    background-color: rgba(23, 162, 184, 0.1);
+}
