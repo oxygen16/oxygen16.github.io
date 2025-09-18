@@ -4,9 +4,9 @@
     --bs-primary-rgb: 102, 126, 234;
     --custom-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     --custom-gradient-light: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
-    --pdd-color: #ff6900;
-    --dy-color: #fe2c55;
-    --tb-color: #ff6600;
+    --pdd-color:#da3c37;
+    --dy-color: #2946f7;
+    --tb-color: #ec5621;
 }
 
 body {
@@ -86,24 +86,24 @@ body {
 }
 
 .btn-platform.active[data-platform="pdd"] {
-    background: linear-gradient(135deg, #ff6900, #ff8533);
+    background: linear-gradient(135deg, var(--pdd-color), #da3c37);
     border-color: var(--pdd-color);
     color: white;
-    box-shadow: 0 4px 15px rgba(255, 105, 0, 0.3);
+    box-shadow: 0 4px 15px rgba(225, 64, 39, 0.3);
 }
 
 .btn-platform.active[data-platform="dy"] {
-    background: linear-gradient(135deg, #fe2c55, #ff4d6d);
+    background: linear-gradient(135deg, var(--dy-color), #5b6bff);
     border-color: var(--dy-color);
     color: white;
-    box-shadow: 0 4px 15px rgba(254, 44, 85, 0.3);
+    box-shadow: 0 4px 15px rgba(41, 70, 247, 0.3);
 }
 
 .btn-platform.active[data-platform="tb"] {
-    background: linear-gradient(135deg, #ff6600, #ff8533);
+    background: linear-gradient(135deg, var(--tb-color), #ff7b50);
     border-color: var(--tb-color);
     color: white;
-    box-shadow: 0 4px 15px rgba(255, 102, 0, 0.3);
+    box-shadow: 0 4px 15px rgba(236, 86, 33, 0.3);
 }
 
 /* 输入卡片样式 */
@@ -438,6 +438,154 @@ body {
     
     .export-buttons .col-sm-6 {
         margin-bottom: 0.5rem;
+    }
+}
+
+/* 增强的导出表格样式 */
+.export-table-enhanced {
+    border-collapse: collapse !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+    border-radius: 8px !important;
+    overflow: hidden !important;
+    background: white;
+}
+
+.export-table-enhanced th {
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: inset 0 -2px 0 rgba(255, 255, 255, 0.1);
+}
+
+.export-table-enhanced td {
+    transition: all 0.2s ease;
+    vertical-align: middle !important;
+}
+
+.platform-themed-header {
+    position: relative;
+}
+
+.platform-themed-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* 平台特定表格样式 */
+.platform-pdd .export-table-enhanced {
+    border-top: 4px solid var(--pdd-color);
+}
+
+.platform-dy .export-table-enhanced {
+    border-top: 4px solid var(--dy-color);
+}
+
+.platform-tb .export-table-enhanced {
+    border-top: 4px solid var(--tb-color);
+}
+
+/* 导出页脚样式 */
+.export-footer {
+    margin-top: 25px;
+    padding-top: 15px;
+    border-top: 1px solid #dee2e6;
+    text-align: center;
+    color: #6c757d;
+    font-size: 12px;
+    background: linear-gradient(to right, rgba(108, 117, 125, 0.1), transparent, rgba(108, 117, 125, 0.1));
+    padding: 15px;
+    border-radius: 4px;
+}
+
+/* 数据行悬停效果 */
+.export-table-enhanced tbody tr:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 序号列特殊样式 */
+.export-table-enhanced .sequence-number {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-weight: 700;
+    background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+    position: relative;
+}
+
+.export-table-enhanced .sequence-number::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--platform-color, #007bff);
+}
+
+/* 手机优化样式 */
+.mobile-optimized {
+    max-width: 380px !important;
+    font-size: 10px;
+    width: 100%;
+    display: inline-block;
+}
+
+.mobile-optimized .export-table-enhanced {
+    max-width: 100%;
+    font-size: 10px;
+    table-layout: fixed;
+}
+
+.mobile-optimized .export-table-enhanced th {
+    padding: 8px 4px !important;
+    font-size: 11px !important;
+}
+
+.mobile-optimized .export-table-enhanced td {
+    padding: 8px 6px !important;
+    font-size: 10px !important;
+    word-break: break-all;
+}
+
+.mobile-optimized .export-header {
+    padding: 12px 8px !important;
+}
+
+.mobile-optimized .export-header h2 {
+    font-size: 16px !important;
+}
+
+/* 手机端特殊优化 */
+@media (max-width: 380px) {
+    .mobile-optimized {
+        max-width: 100% !important;
+        padding: 8px !important;
+    }
+    
+    .mobile-optimized .export-table-enhanced {
+        font-size: 9px;
+    }
+    
+    .mobile-optimized .export-table-enhanced th {
+        padding: 6px 3px !important;
+        font-size: 10px !important;
+    }
+    
+    .mobile-optimized .export-table-enhanced td {
+        padding: 6px 4px !important;
+        font-size: 9px !important;
+    }
+    
+    .mobile-optimized .export-header {
+        padding: 10px 6px !important;
+    }
+    
+    .mobile-optimized .export-header h2 {
+        font-size: 14px !important;
     }
 }
 

@@ -425,6 +425,9 @@ class UnifiedInterfaceManager {
         
         // 默认添加5支装白色
         this.addDefaultOrders();
+        
+        // 绑定checkbox事件监听器
+        this.bindCheckboxListeners();
     }
 
     /**
@@ -470,6 +473,50 @@ class UnifiedInterfaceManager {
                 whiteCheckbox.checked = true;
                 whiteQtyInput.value = '1';
             }
+        });
+    }
+
+    /**
+     * 绑定checkbox事件监听器，实现点击自动增加数量
+     */
+    bindCheckboxListeners() {
+        const addressItems = document.querySelectorAll('#address-list .address-item');
+        
+        addressItems.forEach((item, addressIndex) => {
+            PRODUCT_OPTIONS.forEach(option => {
+                const checkboxId = `${option.id}-${addressIndex}-unified`;
+                const qtyInputId = `${option.id}-qty-${addressIndex}-unified`;
+                const checkbox = document.getElementById(checkboxId);
+                const qtyInput = document.getElementById(qtyInputId);
+                
+                if (checkbox && qtyInput) {
+                    // 添加checkbox点击事件监听器
+                    checkbox.addEventListener('change', (e) => {
+                        if (e.target.checked) {
+                            // 当checkbox被选中时，如果数量为0，则设置为1
+                            const currentValue = parseInt(qtyInput.value) || 0;
+                            if (currentValue === 0) {
+                                qtyInput.value = '1';
+                            }
+                        } else {
+                            // 当checkbox被取消选中时，将数量重置为0
+                            qtyInput.value = '0';
+                        }
+                    });
+                    
+                    // 添加数量输入框事件监听器
+                    qtyInput.addEventListener('input', (e) => {
+                        const value = parseInt(e.target.value) || 0;
+                        // 如果数量大于0，自动选中checkbox
+                        if (value > 0) {
+                            checkbox.checked = true;
+                        } else {
+                            // 如果数量为0，取消选中checkbox
+                            checkbox.checked = false;
+                        }
+                    });
+                }
+            });
         });
     }
 
@@ -771,7 +818,7 @@ class UnifiedInterfaceManager {
         this.finalData.forEach((item, index) => {
             // 安全访问数据，避免 undefined 错误
             const address = (item.address || item.shortAddress || '地址信息缺失').toString();
-            const orderInfo = (item.orderInfo || '无订单信息').toString();
+            const orderInfo = (item.orderInfo && item.orderInfo.trim() !== '' ? item.orderInfo : '无订单信息').toString();
             const platform = this.getPlatformName(this.currentPlatform) || '未知平台';
             
             const row = [
@@ -821,96 +868,175 @@ class UnifiedInterfaceManager {
     createTableElement() {
         // 创建容器
         const container = document.createElement('div');
-        container.className = 'export-table-container';
+        container.className = 'export-table-container mobile-optimized';
         container.style.cssText = `
             background: #ffffff;
-            padding: 30px;
-            border-radius: 12px;
+            padding: 12px;
+            border-radius: 8px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            max-width: 380px;
+            width: 100%;
+            margin: 0 auto;
+            display: inline-block;
         `;
 
         // 添加标题区域
         const header = document.createElement('div');
         header.className = 'export-header';
+        // 获取平台主题色
+        const platformColors = this.getPlatformColors();
+        
         header.style.cssText = `
             text-align: center;
-            margin-bottom: 25px;
-            border-bottom: 3px solid #007bff;
-            padding-bottom: 15px;
+            margin-bottom: 12px;
+            padding: 12px 8px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,250,252,0.95) 100%);
+            border-radius: 6px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+            border: 1px solid rgba(0,0,0,0.06);
+            position: relative;
+            overflow: hidden;
         `;
+        
+        // 添加装饰性背景条纹
+        const decorativeStripe = document.createElement('div');
+        decorativeStripe.style.cssText = `
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: ${platformColors.gradient};
+            box-shadow: 0 2px 8px ${platformColors.light};
+        `;
+        header.appendChild(decorativeStripe);
         
         const title = document.createElement('h2');
         title.style.cssText = `
             color: #2c3e50;
-            font-size: 24px;
-            font-weight: 600;
+            font-size: 16px;
+            font-weight: 700;
             margin: 0 0 8px 0;
+            text-align: center;
+            position: relative;
         `;
-        title.textContent = `${this.getPlatformName(this.currentPlatform)} - 订单信息表`;
+        title.textContent = `${this.getPlatformName(this.currentPlatform)} - 订单数据`;
+        
+        // 添加标题下方的装饰线
+        const titleDecoration = document.createElement('div');
+        titleDecoration.style.cssText = `
+            width: 60px;
+            height: 3px;
+            background: ${platformColors.gradient};
+            margin: 8px auto 15px auto;
+            border-radius: 2px;
+        `;
+        
+        const infoContainer = document.createElement('div');
+        infoContainer.style.cssText = `
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+            padding: 6px 10px;
+            background: rgba(255,255,255,0.7);
+            border-radius: 4px;
+            border: 1px solid rgba(0,0,0,0.05);
+        `;
         
         const subtitle = document.createElement('div');
         subtitle.style.cssText = `
             color: #7f8c8d;
-            font-size: 14px;
-            margin-bottom: 8px;
+            font-size: 10px;
+            font-weight: 500;
         `;
         subtitle.textContent = `导出时间: ${new Date().toLocaleString('zh-CN')}`;
         
         const summary = document.createElement('div');
         summary.style.cssText = `
-            color: #e74c3c;
-            font-size: 16px;
-            font-weight: 500;
+            color: ${platformColors.primary};
+            font-size: 12px;
+            font-weight: 700;
+            background: ${platformColors.light};
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid ${platformColors.primary}20;
         `;
         summary.textContent = `总计: ${this.finalData.length} 条订单`;
         
+        infoContainer.appendChild(subtitle);
+        infoContainer.appendChild(summary);
+        
         header.appendChild(title);
-        header.appendChild(subtitle);
-        header.appendChild(summary);
+        header.appendChild(titleDecoration);
+        header.appendChild(infoContainer);
         
         // 创建表格
         const table = document.createElement('table');
-        table.className = 'table table-bordered';
+        table.className = 'table table-bordered export-table-enhanced mobile-optimized';
         table.style.cssText = `
             margin: 0;
             border-collapse: collapse;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             border-radius: 8px;
             overflow: hidden;
+            width: 100%;
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            font-size: 12px;
+            table-layout: auto;
         `;
         
         const thead = document.createElement('thead');
+        thead.className = 'platform-themed-header';
         thead.style.cssText = `
-            background-color: #6c757d;
+            background: ${platformColors.gradient};
             color: white;
         `;
         thead.innerHTML = `
             <tr>
-                <th style="width: 80px; padding: 15px 12px; font-size: 14px; font-weight: 600; text-align: center; border: none;">序号</th>
-                <th style="padding: 15px 20px; font-size: 14px; font-weight: 600; border: none;">订单详情</th>
+                <th style="min-width: 60px; padding: 8px 4px; font-size: 11px; font-weight: 700; text-align: center; border: none;">序号</th>
+                <th style="min-width: 100px; padding: 8px 6px; font-size: 11px; font-weight: 700; text-align: center; border: none;">收件人</th>
+                <th style="min-width: 200px; padding: 8px 6px; font-size: 11px; font-weight: 700; text-align: center; border: none;">订单信息</th>
             </tr>
         `;
         table.appendChild(thead);
         
         const tbody = document.createElement('tbody');
         this.finalData.forEach((item, index) => {
-            // 安全访问数据，避免 undefined 错误
-            const address = item.address || item.shortAddress || '地址信息缺失';
-            const orderInfo = item.orderInfo || '无订单信息';
+            // 提取收件人信息
+            const recipient = this.extractRecipientInfo(item);
+            const orderInfo = item.orderInfo && item.orderInfo.trim() !== '' ? item.orderInfo : '无订单信息';
+            
+            
             
             const row = document.createElement('tr');
             row.style.cssText = `
-                transition: background-color 0.2s ease;
-                ${index % 2 === 0 ? 'background-color: #f8f9fa;' : 'background-color: #ffffff;'}
+                transition: all 0.2s ease;
+                ${index % 2 === 0 ? 'background-color: #fafbfc;' : 'background-color: #ffffff;'}
+                border-bottom: 1px solid #e1e8ed;
             `;
+            
+            // 鼠标悬停效果（仅在非导出模式下添加）
+            const isExportMode = table.classList && table.classList.contains('export-only');
+            if (typeof window !== 'undefined' && !isExportMode) {
+                row.addEventListener('mouseenter', () => {
+                    row.style.backgroundColor = platformColors.hover;
+                });
+                row.addEventListener('mouseleave', () => {
+                    row.style.backgroundColor = index % 2 === 0 ? '#fafbfc' : '#ffffff';
+                });
+            }
+            
             row.innerHTML = `
-                <td style="text-align: center; padding: 15px 12px; font-weight: 600; color: #495057; border: 1px solid #e9ecef; vertical-align: middle;">
+                <td style="text-align: center; padding: 8px 4px; font-weight: 700; color: #000000; border: 1px solid #000000; vertical-align: middle; font-size: 14px; background: #ffffff;">
                     ${String(index + 1).padStart(3, '0')}
                 </td>
-                <td style="padding: 15px 20px; line-height: 1.6; color: #212529; border: 1px solid #e9ecef; word-break: break-all;">
-                    <div style="font-weight: 500; margin-bottom: 5px;">${this.escapeHtml(address)}</div>
-                    <div style="color: #6c757d; font-size: 13px; background: #e9ecef; padding: 8px 12px; border-radius: 4px; margin-top: 8px;">
+                <td style="padding: 8px 6px; color: #000000; border: 1px solid #000000; vertical-align: middle; font-size: 12px; font-weight: 600; word-break: break-all; background: #ffffff;">
+                    ${this.escapeHtml(recipient)}
+                </td>
+                <td style="padding: 8px 6px; color: #000000; border: 1px solid #000000; vertical-align: middle; font-size: 12px; line-height: 1.4; background: #ffffff;">
+                    <div style="color: #000000; padding: 4px 6px; border-radius: 3px; word-break: break-all; font-weight: 600;">
                         ${this.escapeHtml(orderInfo)}
                     </div>
                 </td>
@@ -952,42 +1078,449 @@ class UnifiedInterfaceManager {
             return;
         }
         
-        // 确保表格容器存在（但不显示预览）
-        let tableContainer = document.getElementById('table-container');
-        
-        if (!tableContainer) {
-            tableContainer = document.createElement('div');
-            tableContainer.id = 'table-container';
-            tableContainer.style.cssText = `
-                position: absolute;
-                top: -9999px;
-                left: -9999px;
-                visibility: hidden;
-            `;
-            document.body.appendChild(tableContainer);
+        // 验证数据
+        if (!this.finalData || this.finalData.length === 0) {
+            this.showMessage('没有可导出的数据，请先生成订单', 'warning');
+            return;
         }
         
-        // 创建表格（仅用于图片导出，不显示预览）
-        if (tableContainer.children.length === 0) {
-            try {
-                const table = this.createTableElement();
-                tableContainer.innerHTML = '';
-                tableContainer.appendChild(table);
-                
-                // 等待DOM更新后捕获
-                setTimeout(() => this.captureTable(), 100);
-            } catch (error) {
-                console.error('创建图片导出表格失败:', error);
-                this.showMessage(`创建表格失败: ${error.message}`, 'danger');
-                return;
+        // 验证数据结构
+        const hasValidData = this.finalData.every(item => 
+            item && typeof item === 'object' && 
+            (item.address || item.shortAddress || item.fullResult || item.orderInfo)
+        );
+        
+        if (!hasValidData) {
+            console.error('数据结构验证失败:', this.finalData);
+            this.showMessage('数据结构不完整，请重新生成订单', 'danger');
+            return;
+        }
+        
+        this.showMessage(`正在生成图片，包含 ${this.finalData.length} 条订单数据...`, 'info');
+        
+        try {
+            // 创建一个临时的可见容器，使用紧凑的移动端优化尺寸
+            const tempContainer = document.createElement('div');
+            tempContainer.style.cssText = `
+                position: fixed;
+                top: -10000px;
+                left: 0;
+                width: 500px;
+                background: white;
+                z-index: 9999;
+                visibility: visible;
+                opacity: 1;
+                padding: 10px;
+                display: block;
+            `;
+            document.body.appendChild(tempContainer);
+            
+            // 尝试复制现有的表格，如果不存在则创建新的
+            const existingTableContainer = document.getElementById('table-container');
+            let table;
+            
+            if (existingTableContainer && existingTableContainer.firstElementChild) {
+                // 复制现有表格
+                table = existingTableContainer.firstElementChild.cloneNode(true);
+                console.log('使用现有表格克隆');
+            } else {
+                // 创建简化的表格，专门用于图片导出
+                table = this.createSimpleTableForExport();
+                console.log('创建简化导出表格');
             }
-        } else {
-            this.captureTable();
+            
+            // 标记为导出专用，避免添加事件监听器
+            table.classList.add('export-only');
+            tempContainer.appendChild(table);
+            
+            // 确保表格完全渲染后再捕获 - 使用更可靠的渲染检测
+            this.waitForTableRender(tempContainer, () => {
+                this.captureTableToImageWithRetry(tempContainer, () => {
+                    if (document.body.contains(tempContainer)) {
+                        document.body.removeChild(tempContainer);
+                    }
+                }, 3); // 最多重试3次
+            });
+            
+        } catch (error) {
+            console.error('创建图片导出表格失败:', error);
+            this.showMessage(`创建表格失败: ${error.message}`, 'danger');
         }
     }
 
     /**
-     * 捕获表格为图片
+     * 创建简化的表格专门用于图片导出
+     */
+    createSimpleTableForExport() {
+        // 获取平台颜色
+        const platformColors = this.getPlatformColors();
+        
+        // 创建美观的容器
+        const container = document.createElement('div');
+        container.style.cssText = `
+            background: #ffffff;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        `;
+
+        // 添加美观的标题区域
+        const headerSection = document.createElement('div');
+        headerSection.style.cssText = `
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: linear-gradient(135deg, ${platformColors.primary}15 0%, ${platformColors.secondary}15 100%);
+            border-radius: 8px;
+            border-left: 4px solid ${platformColors.primary};
+        `;
+        
+        const title = document.createElement('h2');
+        title.style.cssText = `
+            color: ${platformColors.primary};
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0 0 8px 0;
+            text-align: center;
+        `;
+        title.textContent = `${this.getPlatformName(this.currentPlatform)} - 订单数据`;
+        
+        const subtitle = document.createElement('div');
+        subtitle.style.cssText = `
+            color: #666;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+        `;
+        subtitle.innerHTML = `
+            <span>导出时间: ${new Date().toLocaleString('zh-CN')}</span>
+            <span style="background: ${platformColors.primary}; color: white; padding: 4px 8px; border-radius: 4px; font-weight: 600;">总计: ${this.finalData.length} 条订单</span>
+        `;
+        
+        headerSection.appendChild(title);
+        headerSection.appendChild(subtitle);
+        container.appendChild(headerSection);
+
+        // 创建美观表格
+        const table = document.createElement('table');
+        table.style.cssText = `
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        `;
+
+        // 表头
+        const thead = document.createElement('thead');
+        const headerRow = document.createElement('tr');
+        
+        const headers = ['序号', '收件人', '订单信息'];
+        const widths = ['15%', '35%', '50%'];
+        
+        headers.forEach((headerText, index) => {
+            const th = document.createElement('th');
+            th.style.cssText = `
+                border: none;
+                padding: 12px 8px;
+                background: ${platformColors.primary};
+                color: white;
+                font-weight: 700;
+                text-align: center;
+                font-size: 13px;
+                width: ${widths[index]};
+            `;
+            th.textContent = headerText;
+            headerRow.appendChild(th);
+        });
+        
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+
+        // 表体
+        const tbody = document.createElement('tbody');
+        
+        this.finalData.forEach((item, index) => {
+            const row = document.createElement('tr');
+            row.style.cssText = `
+                background: ${index % 2 === 0 ? '#fafbfc' : '#ffffff'};
+            `;
+            
+            // 序号
+            const td1 = document.createElement('td');
+            td1.style.cssText = `
+                border: 1px solid #e1e8ed;
+                padding: 10px 8px;
+                text-align: center;
+                color: ${platformColors.primary};
+                font-size: 12px;
+                font-weight: 700;
+                background: transparent;
+            `;
+            td1.textContent = String(index + 1).padStart(3, '0');
+            
+            // 收件人
+            const td2 = document.createElement('td');
+            td2.style.cssText = `
+                border: 1px solid #e1e8ed;
+                padding: 10px 8px;
+                color: #2c3e50;
+                font-size: 11px;
+                font-weight: 600;
+                background: transparent;
+            `;
+            const recipient = this.extractRecipientInfo(item);
+            td2.textContent = recipient;
+            
+            // 订单信息
+            const td3 = document.createElement('td');
+            td3.style.cssText = `
+                border: 1px solid #e1e8ed;
+                padding: 10px 8px;
+                color: #34495e;
+                font-size: 11px;
+                background: transparent;
+            `;
+            
+            const orderInfo = item.orderInfo && item.orderInfo.trim() !== '' ? item.orderInfo : '无订单信息';
+            
+            // 创建订单信息的内部容器
+            const orderDiv = document.createElement('div');
+            orderDiv.style.cssText = `
+                background: ${platformColors.light};
+                padding: 6px 8px;
+                border-radius: 4px;
+                border-left: 3px solid ${platformColors.primary};
+                color: #2c3e50;
+                font-weight: 600;
+            `;
+            orderDiv.textContent = orderInfo;
+            td3.appendChild(orderDiv);
+            
+            row.appendChild(td1);
+            row.appendChild(td2);
+            row.appendChild(td3);
+            tbody.appendChild(row);
+        });
+        
+        table.appendChild(tbody);
+        container.appendChild(table);
+
+        // 添加美观页脚
+        const footer = document.createElement('div');
+        footer.style.cssText = `
+            margin-top: 20px;
+            padding: 15px;
+            background: linear-gradient(90deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 6px;
+            border-top: 2px solid ${platformColors.primary};
+            text-align: center;
+            color: #666;
+            font-size: 11px;
+        `;
+        footer.innerHTML = `
+            <div style="color: #495057; font-weight: 600; margin-bottom: 5px;">智能地址订单管理系统 - 统一界面版</div>
+            <div>© ${new Date().getFullYear()} 版权所有 | 数据导出时间: ${this.getFormattedTimestamp()}</div>
+        `;
+        container.appendChild(footer);
+
+        return container;
+    }
+
+    /**
+     * 等待表格完全渲染
+     */
+    waitForTableRender(container, callback, maxAttempts = 10, currentAttempt = 0) {
+        const tableElement = container.querySelector('table');
+        const tbody = tableElement ? tableElement.querySelector('tbody') : null;
+        const rows = tbody ? tbody.querySelectorAll('tr') : [];
+        
+        console.log(`渲染检测第 ${currentAttempt + 1} 次:`, { 
+            hasTable: !!tableElement, 
+            hasTbody: !!tbody,
+            rowCount: rows.length,
+            expectedRows: this.finalData.length 
+        });
+        
+        // 检查渲染是否完成
+        const isRenderComplete = tableElement && tbody && rows.length === this.finalData.length;
+        
+        if (isRenderComplete) {
+            console.log('表格渲染完成，开始截图');
+            // 额外等待一点时间确保样式完全应用
+            setTimeout(callback, 100);
+        } else if (currentAttempt < maxAttempts) {
+            // 继续等待渲染
+            requestAnimationFrame(() => {
+                setTimeout(() => {
+                    this.waitForTableRender(container, callback, maxAttempts, currentAttempt + 1);
+                }, 100);
+            });
+        } else {
+            console.warn('表格渲染超时，强制开始截图');
+            // 即使未完全渲染也尝试截图
+            setTimeout(callback, 100);
+        }
+    }
+
+    /**
+     * 带重试机制的图片捕获方法
+     */
+    captureTableToImageWithRetry(container, cleanup, maxRetries = 3, currentRetry = 0) {
+        console.log(`开始第 ${currentRetry + 1} 次图片捕获尝试`);
+        
+        this.captureTableToImage(container, cleanup, (error) => {
+            // 错误回调
+            if (currentRetry < maxRetries - 1) {
+                console.warn(`第 ${currentRetry + 1} 次尝试失败，准备重试:`, error.message);
+                this.showMessage(`图片生成失败，正在重试 (${currentRetry + 2}/${maxRetries})...`, 'warning');
+                
+                // 等待一段时间后重试
+                setTimeout(() => {
+                    this.captureTableToImageWithRetry(container, cleanup, maxRetries, currentRetry + 1);
+                }, 1000 * (currentRetry + 1)); // 递增等待时间
+            } else {
+                console.error(`所有 ${maxRetries} 次尝试均失败`);
+                this.showMessage(`图片导出失败，已尝试 ${maxRetries} 次`, 'danger');
+                cleanup && cleanup();
+            }
+        });
+    }
+
+    /**
+     * 捕获表格为图片（新的改进版本）
+     */
+    captureTableToImage(container, cleanup, errorCallback = null) {
+        const renderTarget = container.firstElementChild || container;
+        
+        // 确保目标有内容和尺寸
+        if (!renderTarget || renderTarget.children.length === 0) {
+            this.showMessage('表格内容为空，无法导出', 'danger');
+            cleanup && cleanup();
+            return;
+        }
+        
+        // 详细检查表格结构
+        const tableElement = renderTarget.querySelector ? renderTarget.querySelector('table') : null;
+        const tbody = tableElement ? tableElement.querySelector('tbody') : null;
+        const rows = tbody ? tbody.querySelectorAll('tr') : [];
+        
+        console.log('表格结构检查:', {
+            renderTarget: renderTarget.tagName,
+            hasTable: !!tableElement,
+            hasTbody: !!tbody,
+            rowCount: rows.length,
+            expectedData: this.finalData.length
+        });
+        
+        // 如果表格没有数据行，但应该有数据，则报错
+        if (rows.length === 0 && this.finalData && this.finalData.length > 0) {
+            const error = new Error('表格数据未正确渲染');
+            console.error('表格数据未正确渲染');
+            
+            if (errorCallback) {
+                errorCallback(error);
+                return;
+            } else {
+                this.showMessage('表格数据未正确渲染，请重试', 'danger');
+                cleanup && cleanup();
+                return;
+            }
+        }
+        
+        // 获取渲染尺寸 - 使用紧凑的移动端尺寸
+        const rect = renderTarget.getBoundingClientRect();
+        const width = Math.max(renderTarget.scrollWidth, rect.width, 400);
+        const height = Math.max(renderTarget.scrollHeight, rect.height, 300);
+        
+        console.log('渲染目标尺寸:', { width, height, scrollWidth: renderTarget.scrollWidth, scrollHeight: renderTarget.scrollHeight });
+        
+        html2canvas(renderTarget, {
+            scale: 2,
+            backgroundColor: '#ffffff',
+            useCORS: true,
+            allowTaint: false,
+            logging: true,  // 启用日志以便调试
+            width,
+            height,
+            scrollX: 0,
+            scrollY: 0,
+            windowWidth: width,
+            windowHeight: height
+        }).then(canvas => {
+            console.log('Canvas生成完成:', { width: canvas.width, height: canvas.height });
+            
+            if (!canvas || canvas.width === 0 || canvas.height === 0) {
+                throw new Error('渲染失败：画布尺寸为0');
+            }
+            
+            // 创建下载链接
+            const filename = `${this.getPlatformName(this.currentPlatform)}_订单_${this.getFormattedTimestamp()}.png`;
+            
+            // 使用toBlob生成文件
+            canvas.toBlob((blob) => {
+                if (!blob || blob.size === 0) {
+                    throw new Error('导出失败：生成空图片');
+                }
+                
+                console.log('图片Blob生成成功:', { size: blob.size });
+                
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                
+                this.showMessage('图片已导出成功', 'success');
+                cleanup && cleanup();
+            }, 'image/png', 0.92);
+            
+        }).catch(error => {
+            console.error('图片导出失败:', error);
+            
+            // 特殊错误处理
+            let errorMessage = error.message;
+            if (error.message.includes('addColorStop') || error.message.includes('CanvasGradient')) {
+                errorMessage = '图片渲染失败，可能是样式兼容性问题，请尝试简化表格样式';
+            } else if (error.message.includes('non-finite')) {
+                errorMessage = '渲染参数错误，请检查表格数据完整性';
+            } else if (error.message.includes('SecurityError') || error.message.includes('tainted')) {
+                errorMessage = '图片渲染被阻止，可能是跨域资源问题';
+            } else if (error.message.includes('NetworkError')) {
+                errorMessage = '网络错误，请检查外部资源加载';
+            } else if (error.message.includes('canvas') && error.message.includes('size')) {
+                errorMessage = '画布尺寸错误，请检查表格内容';
+            }
+            
+            // 如果有错误回调，调用它；否则显示错误消息
+            if (errorCallback) {
+                errorCallback(error);
+            } else {
+                this.showMessage(`图片导出失败: ${errorMessage}`, 'danger');
+                
+                // 提供备选方案提示
+                console.log('可能的解决方案:');
+                console.log('1. 检查表格数据是否完整');
+                console.log('2. 确保没有加载外部图片资源');
+                console.log('3. 检查CSS样式是否有问题');
+                console.log('4. 尝试减少表格内容或简化样式');
+                
+                cleanup && cleanup();
+            }
+        });
+    }
+
+    /**
+     * 捕获表格为图片（旧版本，保持兼容性）
      */
     captureTable() {
         const tableContainer = document.getElementById('table-container');
@@ -996,44 +1529,7 @@ class UnifiedInterfaceManager {
             return;
         }
         
-        // 显示加载提示
-        this.showMessage('正在生成图片，请稍候...', 'info');
-        
-        html2canvas(tableContainer, {
-            scale: 2, // 提高清晰度
-            backgroundColor: '#ffffff',
-            useCORS: true,
-            allowTaint: false,
-            logging: false, // 禁用日志
-            removeContainer: true, // 移除临时容器
-            imageTimeout: 15000, // 15秒超时
-            onrendered: function() {} // 空的渲染回调
-        }).then(canvas => {
-            // 创建下载链接
-            const filename = `${this.getPlatformName(this.currentPlatform)}_订单_${this.getFormattedTimestamp()}.png`;
-            
-            const link = document.createElement('a');
-            link.href = canvas.toDataURL('image/png');
-            link.download = filename;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            this.showMessage('图片已导出成功', 'success');
-            
-        }).catch(error => {
-            console.error('图片导出失败:', error);
-            
-            // 特殊错误处理
-            let errorMessage = error.message;
-            if (error.message.includes('addColorStop') || error.message.includes('CanvasGradient')) {
-                errorMessage = '图片渲染失败，可能是样式兼容性问题';
-            } else if (error.message.includes('non-finite')) {
-                errorMessage = '渲染参数错误，请检查表格数据';
-            }
-            
-            this.showMessage(`图片导出失败: ${errorMessage}`, 'danger');
-        });
+        this.captureTableToImage(tableContainer);
     }
 
     /**
@@ -1052,69 +1548,97 @@ class UnifiedInterfaceManager {
             return;
         }
         
-        // 确保表格容器存在（但不显示预览）
-        let tableContainer = document.getElementById('table-container');
+        this.showMessage('正在生成PDF，请稍候...', 'info');
         
-        if (!tableContainer) {
-            tableContainer = document.createElement('div');
-            tableContainer.id = 'table-container';
-            tableContainer.style.cssText = `
-                position: absolute;
-                top: -9999px;
-                left: -9999px;
-                visibility: hidden;
+        try {
+            // 创建一个临时的可见容器，使用紧凑的移动端优化尺寸
+            const tempContainer = document.createElement('div');
+            tempContainer.style.cssText = `
+                position: fixed;
+                top: -10000px;
+                left: 0;
+                width: 500px;
+                background: white;
+                z-index: 9999;
+                visibility: visible;
+                opacity: 1;
+                padding: 10px;
+                display: block;
             `;
-            document.body.appendChild(tableContainer);
-        }
-        
-        // 创建表格（仅用于PDF导出，不显示预览）
-        if (tableContainer.children.length === 0) {
-            try {
-                const table = this.createTableElement();
-                tableContainer.innerHTML = '';
-                tableContainer.appendChild(table);
-                
-                // 等待DOM更新后生成PDF
-                setTimeout(() => this.generatePdf(), 100);
-            } catch (error) {
-                console.error('创建PDF导出表格失败:', error);
-                this.showMessage(`创建表格失败: ${error.message}`, 'danger');
-                return;
-            }
-        } else {
-            this.generatePdf();
+            document.body.appendChild(tempContainer);
+            
+            // 创建表格并添加到临时容器
+            const table = this.createTableElement();
+            // 标记为导出专用，避免添加事件监听器
+            table.classList.add('export-only');
+            tempContainer.appendChild(table);
+            
+            // 确保表格完全渲染后再生成PDF
+            requestAnimationFrame(() => {
+                setTimeout(() => {
+                    this.generatePdfFromContainer(tempContainer, () => {
+                        // 清理临时容器
+                        document.body.removeChild(tempContainer);
+                    });
+                }, 200);
+            });
+            
+        } catch (error) {
+            console.error('创建PDF导出表格失败:', error);
+            this.showMessage(`创建表格失败: ${error.message}`, 'danger');
         }
     }
 
     /**
-     * 生成PDF
+     * 从容器生成PDF（新的改进版本）
      */
-    generatePdf() {
-        const tableContainer = document.getElementById('table-container');
-        if (!tableContainer) {
-            this.showMessage('表格容器不存在', 'danger');
+    generatePdfFromContainer(container, cleanup) {
+        const renderTarget = container.firstElementChild || container;
+        
+        // 确保目标有内容和尺寸
+        if (!renderTarget || renderTarget.children.length === 0) {
+            this.showMessage('表格内容为空，无法导出PDF', 'danger');
+            cleanup && cleanup();
             return;
         }
         
-        // 显示加载提示
-        this.showMessage('正在生成PDF，请稍候...', 'info');
-        
-        html2canvas(tableContainer, {
+        // 获取渲染尺寸 - 使用紧凑的移动端尺寸
+        const rect = renderTarget.getBoundingClientRect();
+        const width = Math.max(renderTarget.scrollWidth, rect.width, 400);
+        const height = Math.max(renderTarget.scrollHeight, rect.height, 300);
+
+        console.log('PDF渲染目标尺寸:', { width, height, scrollWidth: renderTarget.scrollWidth, scrollHeight: renderTarget.scrollHeight });
+
+        html2canvas(renderTarget, {
             scale: 2,
             backgroundColor: '#ffffff',
             useCORS: true,
             allowTaint: false,
-            logging: false, // 禁用日志
-            removeContainer: true, // 移除临时容器
-            imageTimeout: 15000, // 15秒超时
-            width: tableContainer.scrollWidth,
-            height: tableContainer.scrollHeight,
-            onrendered: function() {} // 空的渲染回调
+            logging: true,  // 启用日志以便调试
+            width,
+            height,
+            scrollX: 0,
+            scrollY: 0,
+            windowWidth: width,
+            windowHeight: height
         }).then(canvas => {
-            const imgData = canvas.toDataURL('image/png');
+            console.log('PDF Canvas生成完成:', { width: canvas.width, height: canvas.height });
+            
+            if (!canvas || canvas.width === 0 || canvas.height === 0) {
+                throw new Error('渲染失败：画布尺寸为0');
+            }
+            
+            // 获取图片数据
+            let imgData = canvas.toDataURL('image/png');
+            if (!imgData || imgData === 'data:,') {
+                throw new Error('无法生成图片数据');
+            }
+            
+            console.log('图片数据生成成功，大小:', imgData.length);
+            
             const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
             
-            // 设置PDF元数据 - 使用英文避免乱码
+            // 设置PDF元数据
             pdf.setProperties({
                 title: `Order Information - ${this.getPlatformName(this.currentPlatform)}`,
                 subject: 'Smart Address Order Management System Export',
@@ -1134,10 +1658,10 @@ class UnifiedInterfaceManager {
             
             let position = margin;
             
-            // 创建页眉区域 - 使用简单的标识而不是中文文字
+            // 创建页眉区域
             const headerHeight = 20;
             
-            // 添加简单的标题标识
+            // 添加标题
             pdf.setFontSize(16);
             pdf.setFont('helvetica', 'bold');
             const title = `${this.getPlatformName(this.currentPlatform)} Orders`;
@@ -1156,41 +1680,16 @@ class UnifiedInterfaceManager {
             
             position += headerHeight;
             
-            // 计算可用空间
-            const footerHeight = 15;
-            const availableHeight = pageHeight - position - margin - footerHeight;
-            
-            if (imgHeight <= availableHeight) {
-                // 单页显示
+            // 添加图片
+            try {
                 pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
-            } else {
-                // 多页显示 - 使用简化的方法
-                // 第一页
-                pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
-                
-                // 计算需要的额外页面
-                const extraHeight = imgHeight - availableHeight;
-                const pageContentHeight = pageHeight - headerHeight - footerHeight - margin;
-                const additionalPages = Math.ceil(extraHeight / pageContentHeight);
-                
-                // 添加额外页面提示
-                for (let page = 1; page <= additionalPages; page++) {
-                    pdf.addPage();
-                    
-                    // 添加延续页标题
-                    pdf.setFontSize(12);
-                    pdf.setFont('helvetica', 'normal');
-                    const continueTitle = `${this.getPlatformName(this.currentPlatform)} Orders (Page ${page + 1})`;
-                    pdf.text(continueTitle, margin, margin + 10);
-                    pdf.line(margin, margin + 12, pageWidth - margin, margin + 12);
-                    
-                    // 添加说明文字
-                    pdf.setFontSize(10);
-                    pdf.text('Table continues from previous page...', margin, margin + 25);
-                }
+                console.log('图片已添加到PDF');
+            } catch (imageError) {
+                console.error('添加图片到PDF失败:', imageError);
+                throw new Error('无法将图像添加到PDF');
             }
             
-            // 添加页脚 - 使用英文和数字避免乱码
+            // 添加页脚
             const totalPages = pdf.internal.getNumberOfPages();
             for (let i = 1; i <= totalPages; i++) {
                 pdf.setPage(i);
@@ -1211,7 +1710,9 @@ class UnifiedInterfaceManager {
             const filename = `${this.getPlatformName(this.currentPlatform)}_Orders_${this.getFormattedTimestamp()}.pdf`;
             pdf.save(filename);
             
+            console.log('PDF保存完成:', filename);
             this.showMessage('PDF已导出成功', 'success');
+            cleanup && cleanup();
             
         }).catch(error => {
             console.error('PDF导出失败:', error);
@@ -1227,7 +1728,21 @@ class UnifiedInterfaceManager {
             }
             
             this.showMessage(`PDF导出失败: ${errorMessage}`, 'danger');
+            cleanup && cleanup();
         });
+    }
+
+    /**
+     * 生成PDF（旧版本，保持兼容性）
+     */
+    generatePdf() {
+        const tableContainer = document.getElementById('table-container');
+        if (!tableContainer) {
+            this.showMessage('表格容器不存在', 'danger');
+            return;
+        }
+        
+        this.generatePdfFromContainer(tableContainer);
     }
 
     /**
@@ -1298,6 +1813,93 @@ class UnifiedInterfaceManager {
         const seconds = String(now.getSeconds()).padStart(2, '0');
         
         return `${year}-${month}-${day}_${hours}-${minutes}-${seconds}`;
+    }
+
+    /**
+     * 获取平台主题颜色
+     * @returns {Object} 包含平台颜色的对象
+     */
+    getPlatformColors() {
+        const colorMap = {
+            pdd: {
+                primary: '#e14027',
+                gradient: 'linear-gradient(135deg, #e14027 0%, #ff6b52 100%)',
+                light: 'rgba(225, 64, 39, 0.12)',
+                hover: 'rgba(225, 64, 39, 0.06)'
+            },
+            dy: {
+                primary: '#2946f7',
+                gradient: 'linear-gradient(135deg, #2946f7 0%, #5b6bff 100%)',
+                light: 'rgba(41, 70, 247, 0.12)',
+                hover: 'rgba(41, 70, 247, 0.06)'
+            },
+            tb: {
+                primary: '#ec5621',
+                gradient: 'linear-gradient(135deg, #ec5621 0%, #ff7b50 100%)',
+                light: 'rgba(236, 86, 33, 0.12)',
+                hover: 'rgba(236, 86, 33, 0.06)'
+            }
+        };
+        
+        return colorMap[this.currentPlatform] || colorMap.pdd;
+    }
+
+    /**
+     * 提取收件人信息（姓名-电话后4位）
+     * @param {Object} item - 订单项数据
+     * @returns {string} 格式化的收件人信息
+     */
+    extractRecipientInfo(item) {
+        try {
+            // 安全检查输入参数
+            if (!item || typeof item !== 'object') {
+                console.warn('extractRecipientInfo: 无效的item参数', item);
+                return '数据异常';
+            }
+            
+            // 从不同字段尝试获取姓名和电话
+            const name = item.originalName || item.name || '';
+            const phone = item.phone || '';
+            
+            if (!name && !phone) {
+                // 如果没有单独的姓名和电话字段，尝试从地址中提取
+                const address = item.address || item.shortAddress || item.fullResult || '';
+                
+                if (!address) {
+                    return '信息缺失';
+                }
+                
+                // 改进的正则表达式，更好地匹配中文姓名和电话
+                const nameMatch = address.match(/^([^\d\s]{2,4})\s/);
+                const phoneMatch = address.match(/(\d{4})(?:\D|$)/);
+                
+                if (nameMatch && phoneMatch) {
+                    return `${nameMatch[1]}-${phoneMatch[1]}`;
+                } else if (nameMatch) {
+                    return `${nameMatch[1]}-未知`;
+                } else if (phoneMatch) {
+                    return `未知-${phoneMatch[1]}`;
+                }
+                
+                return '收件人信息缺失';
+            }
+            
+            // 提取电话后4位
+            const phoneMatch = phone.toString().match(/(\d{4})$/);
+            const last4Digits = phoneMatch ? phoneMatch[1] : '0000';
+            
+            // 清理姓名中的特殊字符，保留中文字符
+            const cleanName = name.toString().replace(/[\[\]()（）\-\s]/g, '').trim();
+            
+            // 确保姓名不为空
+            const finalName = cleanName || '未知';
+            
+            return `${finalName}-${last4Digits}`;
+            
+        } catch (error) {
+            console.error('提取收件人信息失败:', error, 'item:', item);
+            return '信息提取失败';
+        }
     }
 
     /**
