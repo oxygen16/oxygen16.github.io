@@ -241,8 +241,6 @@ class TaobaoAddressProcessor extends AddressProcessorStrategy {
             const processedLine = this.preprocessLine(rawLine);
             const parts = this.parseLine(processedLine);
             
-            if (parts.length < 2) continue;
-            
             const { phonePart, namePart, addressPart } = this.extractParts(parts);
             const { phoneNumber, phoneSuffix } = this.parsePhone(phonePart);
             const shortAddress = namePart + phoneSuffix;
@@ -282,10 +280,83 @@ class TaobaoAddressProcessor extends AddressProcessorStrategy {
      * @returns {Object} {phonePart: string, namePart: string, addressPart: string}
      */
     extractParts(parts) {
-        const phonePart = parts.length >= 3 ? parts[parts.length - 1].trim() : '';
-        const namePart = parts[parts.length - 2].trim();
-        const addressPart = parts.slice(0, parts.length - 2).join(',').trim();
-        
+        const trimmed = parts.map(p => p.trim()).filter(Boolean);
+
+        // 支持无逗号的单行通用格式：地址 姓名 电话
+        if (trimmed.length === 1) {
+            const line = trimmed[0];
+            // 匹配末尾电话：固话(可带分机) 或 手机(可带后缀)
+            const phoneAtEnd = line.match(/(\d{3,4}-\d{6,8}(?:-\d{3,4})?|1\d{10}(?:-\d{3,4})?)\s*$/);
+            if (phoneAtEnd) {
+                let phonePart = phoneAtEnd[1];
+                let beforePhone = line.slice(0, phoneAtEnd.index).trim();
+
+                // 检查前面是否紧邻一个固话（组合情形：固话 手机-后缀）
+                const landlineAtEnd = beforePhone.match(/(\d{3,4}-\d{6,8})\s*$/);
+                if (landlineAtEnd && this.isMobileWithSuffix(phonePart)) {
+                    const landline = landlineAtEnd[1];
+                    const ext = this.extractMobileExtension(phonePart);
+                    phonePart = `${landline}-${ext}`;
+                    beforePhone = beforePhone.slice(0, landlineAtEnd.index).trim();
+                }
+
+                // 提取末尾姓名（2-8位中文，含·/•）
+                const nameMatch = beforePhone.match(/([\u4e00-\u9fa5·•]{2,8})\s*$/);
+                let namePart = '';
+                let addressPart = '';
+                if (nameMatch) {
+                    namePart = nameMatch[1];
+                    addressPart = beforePhone.slice(0, nameMatch.index).trim();
+                } else {
+                    // 兜底：无法识别姓名时，整体视为地址
+                    addressPart = beforePhone;
+                }
+
+                return { phonePart, namePart, addressPart };
+            }
+        }
+        let index = trimmed.length - 1;
+
+        // 从末尾开始收集可能的电话号码片段（最多收集两个）
+        const phoneTokens = [];
+        while (index >= 0 && this.isPhoneLike(trimmed[index]) && phoneTokens.length < 2) {
+            phoneTokens.unshift(trimmed[index]);
+            index--;
+        }
+
+        let phonePart = '';
+        let namePart = '';
+        let addressPart = '';
+
+        if (phoneTokens.length >= 2) {
+            // 如果同时包含 固话 和 带后缀的手机，则合并为 固话-后缀
+            const landline = phoneTokens.find(t => this.isLandline(t));
+            const mobileWithExt = phoneTokens.find(t => this.isMobileWithSuffix(t));
+            if (landline && mobileWithExt) {
+                const ext = this.extractMobileExtension(mobileWithExt);
+                phonePart = `${landline}-${ext}`;
+            } else {
+                // 其他情况，取最后一个作为电话
+                phonePart = phoneTokens[phoneTokens.length - 1];
+            }
+            namePart = trimmed[index] || '';
+            index--;
+            addressPart = trimmed.slice(0, Math.max(0, index + 1)).join(',').trim();
+        } else if (phoneTokens.length === 1) {
+            // 正常：末尾一个电话
+            phonePart = phoneTokens[0];
+            namePart = trimmed[index] || '';
+            index--;
+            addressPart = trimmed.slice(0, Math.max(0, index + 1)).join(',').trim();
+        } else {
+            // 兜底：按 地址, 姓名, 电话 结构（可能不完全符合）
+            const len = trimmed.length;
+            const hasEnough = len >= 3;
+            phonePart = hasEnough ? trimmed[len - 1] : '';
+            namePart = hasEnough ? trimmed[len - 2] : (trimmed[len - 1] || '');
+            addressPart = hasEnough ? trimmed.slice(0, len - 2).join(',').trim() : trimmed.slice(0, Math.max(0, len - 1)).join(',').trim();
+        }
+
         return { phonePart, namePart, addressPart };
     }
 
@@ -297,18 +368,68 @@ class TaobaoAddressProcessor extends AddressProcessorStrategy {
     parsePhone(phonePart) {
         let phoneSuffix = '';
         let phoneNumber = phonePart;
-        
+
         if (phoneNumber) {
-            const phoneHyphenParts = phoneNumber.split('-');
-            if (phoneHyphenParts.length >= 2) {
-                phoneSuffix = '-' + phoneHyphenParts[1];
+            const segments = phoneNumber.split('-');
+            if (segments.length >= 3) {
+                // 例如：0416-3860170-5404 → 使用最后一段作为短地址后缀
+                phoneSuffix = '-' + segments[segments.length - 1];
+            } else if (segments.length === 2) {
+                // 例如：0416-3860170 或 17896112393-5404
+                phoneSuffix = '-' + segments[1];
             } else {
                 const suffix = phoneNumber.length >= 4 ? phoneNumber.slice(-4) : phoneNumber;
                 phoneSuffix = '-' + suffix;
             }
         }
-        
+
         return { phoneNumber, phoneSuffix };
+    }
+
+    /**
+     * 判断是否为固话
+     * @param {string} value
+     * @returns {boolean}
+     */
+    isLandline(value) {
+        return /^\d{3,4}-\d{6,8}$/.test(value);
+    }
+
+    /**
+     * 判断是否为11位手机号
+     * @param {string} value
+     * @returns {boolean}
+     */
+    isMobile(value) {
+        return /^1\d{10}$/.test(value);
+    }
+
+    /**
+     * 判断是否为携带后缀的手机号（如 17896112393-5404）
+     * @param {string} value
+     * @returns {boolean}
+     */
+    isMobileWithSuffix(value) {
+        return /^1\d{10}-\d{3,4}$/.test(value);
+    }
+
+    /**
+     * 是否像电话号码
+     * @param {string} value
+     * @returns {boolean}
+     */
+    isPhoneLike(value) {
+        return this.isLandline(value) || this.isMobileWithSuffix(value) || this.isMobile(value);
+    }
+
+    /**
+     * 提取手机号的后缀（-后3~4位）
+     * @param {string} mobile
+     * @returns {string}
+     */
+    extractMobileExtension(mobile) {
+        const match = mobile.match(/-(\d{3,4})$/);
+        return match ? match[1] : (mobile.slice(-4) || '');
     }
 
     getPlatformName() {
