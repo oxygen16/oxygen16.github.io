@@ -948,7 +948,7 @@ class UnifiedInterfaceManager {
         const subtitle = document.createElement('div');
         subtitle.style.cssText = `
             color: #7f8c8d;
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 500;
         `;
         subtitle.textContent = `导出时间: ${new Date().toLocaleString('zh-CN')}`;
@@ -956,7 +956,7 @@ class UnifiedInterfaceManager {
         const summary = document.createElement('div');
         summary.style.cssText = `
             color: ${platformColors.primary};
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 700;
             background: ${platformColors.light};
             padding: 4px 8px;
@@ -983,7 +983,7 @@ class UnifiedInterfaceManager {
             overflow: hidden;
             width: 100%;
             font-family: 'Microsoft YaHei', Arial, sans-serif;
-            font-size: 12px;
+            font-size: 13px;
             table-layout: auto;
         `;
         
@@ -995,9 +995,9 @@ class UnifiedInterfaceManager {
         `;
         thead.innerHTML = `
             <tr>
-                <th style="min-width: 60px; padding: 8px 4px; font-size: 11px; font-weight: 700; text-align: center; border: none;">序号</th>
-                <th style="min-width: 100px; padding: 8px 6px; font-size: 11px; font-weight: 700; text-align: center; border: none;">收件人</th>
-                <th style="min-width: 200px; padding: 8px 6px; font-size: 11px; font-weight: 700; text-align: center; border: none;">订单信息</th>
+                <th style="min-width: 40px; padding: 8px 4px; font-size: 12px; font-weight: 700; text-align: center; border: none;">序号</th>
+                <th style="min-width: 120px; padding: 8px 6px; font-size: 12px; font-weight: 700; text-align: center; border: none;">收件人</th>
+                <th style="min-width: 200px; padding: 8px 6px; font-size: 12px; font-weight: 700; text-align: center; border: none;">订单信息</th>
             </tr>
         `;
         table.appendChild(thead);
@@ -1032,10 +1032,10 @@ class UnifiedInterfaceManager {
                 <td style="text-align: center; padding: 8px 4px; font-weight: 700; color: #000000; border: 1px solid #000000; vertical-align: middle; font-size: 14px; background: #ffffff;">
                     ${String(index + 1).padStart(3, '0')}
                 </td>
-                <td style="padding: 8px 6px; color: #000000; border: 1px solid #000000; vertical-align: middle; font-size: 12px; font-weight: 600; word-break: break-all; background: #ffffff;">
+                <td style="padding: 8px 6px; color: #000000; border: 1px solid #000000; vertical-align: middle; font-size: 13px; font-weight: 600; word-break: break-all; background: #ffffff;">
                     ${this.escapeHtml(recipient)}
                 </td>
-                <td style="padding: 8px 6px; color: #000000; border: 1px solid #000000; vertical-align: middle; font-size: 12px; line-height: 1.4; background: #ffffff;">
+                <td style="padding: 8px 6px; color: #000000; border: 1px solid #000000; vertical-align: middle; font-size: 13px; line-height: 1.4; background: #ffffff;">
                     <div style="color: #000000; padding: 4px 6px; border-radius: 3px; word-break: break-all; font-weight: 600;">
                         ${this.escapeHtml(orderInfo)}
                     </div>
@@ -1054,7 +1054,7 @@ class UnifiedInterfaceManager {
             border-top: 1px solid #dee2e6;
             text-align: center;
             color: #6c757d;
-            font-size: 12px;
+            font-size: 13px;
         `;
         footer.innerHTML = `
             <div>智能地址订单管理系统 - 统一界面版</div>
@@ -1190,7 +1190,7 @@ class UnifiedInterfaceManager {
         const subtitle = document.createElement('div');
         subtitle.style.cssText = `
             color: #666;
-            font-size: 12px;
+            font-size: 13px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -1222,7 +1222,7 @@ class UnifiedInterfaceManager {
         const headerRow = document.createElement('tr');
         
         const headers = ['序号', '收件人', '订单信息'];
-        const widths = ['15%', '35%', '50%'];
+        const widths = ['10%', '40%', '50%'];
         
         headers.forEach((headerText, index) => {
             const th = document.createElement('th');
@@ -1233,7 +1233,7 @@ class UnifiedInterfaceManager {
                 color: white;
                 font-weight: 700;
                 text-align: center;
-                font-size: 13px;
+                font-size: 14px;
                 width: ${widths[index]};
             `;
             th.textContent = headerText;
@@ -1259,7 +1259,7 @@ class UnifiedInterfaceManager {
                 padding: 10px 8px;
                 text-align: center;
                 color: ${platformColors.primary};
-                font-size: 12px;
+                font-size: 13px;
                 font-weight: 700;
                 background: transparent;
             `;
@@ -1271,7 +1271,7 @@ class UnifiedInterfaceManager {
                 border: 1px solid #e1e8ed;
                 padding: 10px 8px;
                 color: #2c3e50;
-                font-size: 11px;
+                font-size: 12px;
                 font-weight: 600;
                 background: transparent;
             `;
@@ -1284,7 +1284,7 @@ class UnifiedInterfaceManager {
                 border: 1px solid #e1e8ed;
                 padding: 10px 8px;
                 color: #34495e;
-                font-size: 11px;
+                font-size: 12px;
                 background: transparent;
             `;
             
@@ -1322,7 +1322,7 @@ class UnifiedInterfaceManager {
             border-top: 2px solid ${platformColors.primary};
             text-align: center;
             color: #666;
-            font-size: 11px;
+            font-size: 12px;
         `;
         footer.innerHTML = `
             <div style="color: #495057; font-weight: 600; margin-bottom: 5px;">智能地址订单管理系统 - 统一界面版</div>
@@ -1888,10 +1888,16 @@ class UnifiedInterfaceManager {
             const phoneMatch = phone.toString().match(/(\d{4})$/);
             const last4Digits = phoneMatch ? phoneMatch[1] : '0000';
             
-            // 清理姓名中的特殊字符，保留中文字符
-            const cleanName = name.toString().replace(/[\[\]()（）\-\s]/g, '').trim();
+            // 检查姓名中是否包含方括号内容，如果有则保留原格式
+            const nameStr = name.toString().trim();
             
-            // 确保姓名不为空
+            // 如果姓名包含方括号格式，直接返回原始姓名
+            if (/\[.*\]/.test(nameStr)) {
+                return nameStr;
+            }
+            
+            // 否则按原来的逻辑处理（清理特殊字符并添加电话后4位）
+            const cleanName = nameStr.replace(/[()（）\-\s]/g, '').trim();
             const finalName = cleanName || '未知';
             
             return `${finalName}-${last4Digits}`;
