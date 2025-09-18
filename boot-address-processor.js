@@ -60,7 +60,12 @@ class PddAddressProcessor extends AddressProcessorStrategy {
         
         const lines = processedInput.split('\n').filter(line => line.trim() !== '');
         
-        // 验证行数必须是3的倍数
+        // 检查是否为单行格式（每行包含完整的 姓名 电话 地址 信息）
+        if (this.isSingleLineFormat(lines)) {
+            return this.processSingleLineFormat(lines);
+        }
+        
+        // 验证行数必须是3的倍数（传统的3行格式）
         if (lines.length % 3 !== 0) {
             throw new Error(`输入的总行数应为3的倍数（姓名、电话、地址）。当前行数：${lines.length}。请检查后重试。`);
         }
@@ -103,6 +108,96 @@ class PddAddressProcessor extends AddressProcessorStrategy {
      */
     cleanAddress(address) {
         return address.replace(/；\s*$/, '').replace(/\[\d+\]；\s*$/, '').trim();
+    }
+
+    /**
+     * 判断是否为单行格式（每行包含完整信息）
+     * @param {string[]} lines - 行数组
+     * @returns {boolean}
+     */
+    isSingleLineFormat(lines) {
+        // 如果行数不是3的倍数，可能是单行格式
+        if (lines.length % 3 !== 0) {
+            return true;
+        }
+        
+        // 检查每行是否包含多个空格分隔的部分（姓名 电话 地址）
+        for (const line of lines) {
+            const parts = line.split(/\s+/);
+            if (parts.length >= 3) {
+                // 检查是否有电话号码模式
+                const hasPhone = parts.some(part => /^1\d{10}$|^\d{3,4}-?\d{6,8}/.test(part));
+                if (hasPhone) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
+
+    /**
+     * 处理单行格式的地址数据
+     * @param {string[]} lines - 行数组
+     * @returns {AddressResult[]}
+     */
+    processSingleLineFormat(lines) {
+        const results = [];
+        
+        for (const line of lines) {
+            const parsed = this.parseSingleLine(line);
+            if (parsed) {
+                results.push(parsed);
+            }
+        }
+        
+        return results;
+    }
+
+    /**
+     * 解析单行地址数据
+     * @param {string} line - 单行数据
+     * @returns {AddressResult|null}
+     */
+    parseSingleLine(line) {
+        const parts = line.split(/\s+/);
+        
+        if (parts.length < 3) {
+            return null;
+        }
+        
+        // 寻找电话号码
+        let phoneIndex = -1;
+        let phone = '';
+        
+        for (let i = 0; i < parts.length; i++) {
+            if (/^1\d{10}$|^\d{3,4}-?\d{6,8}/.test(parts[i])) {
+                phoneIndex = i;
+                phone = parts[i];
+                break;
+            }
+        }
+        
+        if (phoneIndex === -1) {
+            return null;
+        }
+        
+        // 提取姓名（电话前面的部分）
+        const nameParts = parts.slice(0, phoneIndex);
+        const originalName = nameParts.join(' ');
+        
+        // 提取地址（电话后面的部分）
+        const addressParts = parts.slice(phoneIndex + 1);
+        const address = this.cleanAddress(addressParts.join(' '));
+        
+        const shortAddress = this.generateShortAddress(originalName, phone);
+        
+        return {
+            shortAddress,
+            originalName,
+            phone,
+            address
+        };
     }
 
     /**

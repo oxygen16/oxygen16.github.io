@@ -135,6 +135,12 @@ class UnifiedInterfaceManager {
             copyInputBtn.addEventListener('click', () => this.handleCopyInput());
         }
         
+        // 添加分号按钮
+        const addSemicolonBtn = document.getElementById('add-semicolon-btn');
+        if (addSemicolonBtn) {
+            addSemicolonBtn.addEventListener('click', () => this.handleAddSemicolon());
+        }
+        
         
         // 复制结果按钮
         const copyResultsBtn = document.getElementById('copy-results-btn');
@@ -368,6 +374,106 @@ class UnifiedInterfaceManager {
         } else {
             this.showMessage('没有内容可复制', 'warning');
         }
+    }
+
+    /**
+     * 为地址数据添加分号
+     */
+    handleAddSemicolon() {
+        const inputElement = document.getElementById('address-input');
+        if (!inputElement) {
+            this.showMessage('找不到输入框', 'danger');
+            return;
+        }
+
+        const input = inputElement.value.trim();
+        if (!input) {
+            this.showMessage('请先输入地址数据', 'warning');
+            return;
+        }
+
+        try {
+            const processedText = this.addSemicolonToAddresses(input);
+            inputElement.value = processedText;
+            this.showMessage('已为地址数据添加分号', 'success');
+        } catch (error) {
+            console.error('添加分号失败:', error);
+            this.showMessage(error.message || '添加分号失败，请重试', 'danger');
+        }
+    }
+
+    /**
+     * 为地址数据添加分号的核心逻辑
+     * @param {string} input - 输入的地址数据
+     * @returns {string} 处理后的地址数据
+     */
+    addSemicolonToAddresses(input) {
+        const lines = input.split('\n').map(line => line.trim()).filter(Boolean);
+        
+        if (lines.length === 0) {
+            throw new Error('没有有效的地址数据');
+        }
+
+        // 判断是否为拼多多格式（每3行一组：姓名、电话、地址）
+        if (lines.length % 3 === 0 && this.isPddFormat(lines)) {
+            return this.convertPddToSemicolonFormat(lines);
+        }
+        
+        // 其他格式：直接在每行末尾添加分号（如果没有的话）
+        return this.addSemicolonToLines(lines);
+    }
+
+    /**
+     * 判断是否为拼多多格式
+     * @param {string[]} lines - 行数组
+     * @returns {boolean}
+     */
+    isPddFormat(lines) {
+        // 检查是否符合拼多多格式：每3行为一组，第2行是电话号码
+        for (let i = 1; i < lines.length; i += 3) {
+            const phoneLine = lines[i];
+            // 简单的电话号码格式检查
+            if (!/^1\d{10}$|^\d{3,4}-?\d{6,8}/.test(phoneLine)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * 将拼多多格式转换为分号分隔格式
+     * @param {string[]} lines - 行数组
+     * @returns {string}
+     */
+    convertPddToSemicolonFormat(lines) {
+        const result = [];
+        
+        for (let i = 0; i < lines.length; i += 3) {
+            const name = lines[i];
+            const phone = lines[i + 1];
+            const address = lines[i + 2];
+            
+            // 组合成一行：姓名 电话 地址；
+            const combinedLine = `${name} ${phone} ${address}；`;
+            result.push(combinedLine);
+        }
+        
+        return result.join('\n');
+    }
+
+    /**
+     * 为每行末尾添加分号
+     * @param {string[]} lines - 行数组
+     * @returns {string}
+     */
+    addSemicolonToLines(lines) {
+        return lines.map(line => {
+            // 如果行末尾已经有分号，就不重复添加
+            if (line.endsWith('；') || line.endsWith(';')) {
+                return line;
+            }
+            return line + '；';
+        }).join('\n');
     }
 
     /**
