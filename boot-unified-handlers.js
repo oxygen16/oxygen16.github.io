@@ -1152,6 +1152,18 @@ class UnifiedInterfaceManager {
      * 创建简化的表格专门用于图片导出
      */
     createSimpleTableForExport() {
+        // 数据验证
+        console.log('createSimpleTableForExport: 数据检查', {
+            finalDataExists: !!this.finalData,
+            finalDataLength: this.finalData?.length,
+            sampleData: this.finalData?.[0]
+        });
+        
+        if (!this.finalData || this.finalData.length === 0) {
+            console.error('createSimpleTableForExport: 没有可用数据');
+            throw new Error('没有可导出的数据');
+        }
+        
         // 获取平台颜色
         const platformColors = this.getPlatformColors();
         
@@ -1325,8 +1337,8 @@ class UnifiedInterfaceManager {
             font-size: 12px;
         `;
         footer.innerHTML = `
-            <div style="color: #495057; font-weight: 600; margin-bottom: 5px;">智能地址订单管理系统 - 统一界面版</div>
-            <div>© ${new Date().getFullYear()} 版权所有 | 数据导出时间: ${this.getFormattedTimestamp()}</div>
+            <div style="color: #495057; font-weight: 600; margin-bottom: 5px;">智能地址订单管理系统</div>
+            <div>© ${new Date().getFullYear()} 版权所有</div>
         `;
         container.appendChild(footer);
 
@@ -1519,18 +1531,6 @@ class UnifiedInterfaceManager {
         });
     }
 
-    /**
-     * 捕获表格为图片（旧版本，保持兼容性）
-     */
-    captureTable() {
-        const tableContainer = document.getElementById('table-container');
-        if (!tableContainer) {
-            this.showMessage('表格容器不存在', 'danger');
-            return;
-        }
-        
-        this.captureTableToImage(tableContainer);
-    }
 
     /**
      * 导出PDF
@@ -1548,44 +1548,72 @@ class UnifiedInterfaceManager {
             return;
         }
         
+        // 数据验证
+        if (!this.finalData || this.finalData.length === 0) {
+            this.showMessage('没有可导出的数据，请先生成订单', 'warning');
+            return;
+        }
+        
         this.showMessage('正在生成PDF，请稍候...', 'info');
         
         try {
-            // 创建一个临时的可见容器，使用紧凑的移动端优化尺寸
+            // 创建临时容器来渲染完整表格
             const tempContainer = document.createElement('div');
             tempContainer.style.cssText = `
                 position: fixed;
                 top: -10000px;
                 left: 0;
-                width: 500px;
+                width: 800px;
                 background: white;
                 z-index: 9999;
                 visibility: visible;
                 opacity: 1;
-                padding: 10px;
+                padding: 20px;
                 display: block;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
             `;
             document.body.appendChild(tempContainer);
             
-            // 创建表格并添加到临时容器
-            const table = this.createTableElement();
+            // 优先使用现有表格，如果没有则创建简化版本
+            const existingTableContainer = document.getElementById('table-container');
+            let table;
+            
+            if (existingTableContainer && existingTableContainer.firstElementChild) {
+                // 复制现有表格
+                table = existingTableContainer.firstElementChild.cloneNode(true);
+                console.log('PDF导出: 使用现有表格克隆');
+            } else {
+                // 创建简化的表格，专门用于PDF导出
+                table = this.createSimpleTableForExport();
+                console.log('PDF导出: 创建简化导出表格');
+            }
+            
             // 标记为导出专用，避免添加事件监听器
-            table.classList.add('export-only');
+            if (table.classList) {
+                table.classList.add('export-only');
+            }
             tempContainer.appendChild(table);
             
             // 确保表格完全渲染后再生成PDF
             requestAnimationFrame(() => {
                 setTimeout(() => {
+                    // 使用图片切割的方式生成PDF
                     this.generatePdfFromContainer(tempContainer, () => {
-                        // 清理临时容器
-                        document.body.removeChild(tempContainer);
+                        // 安全清理临时容器
+                        try {
+                            if (tempContainer && tempContainer.parentNode) {
+                                tempContainer.parentNode.removeChild(tempContainer);
+                            }
+                        } catch (cleanupError) {
+                            console.warn('清理临时容器时出错:', cleanupError);
+                        }
                     });
                 }, 200);
             });
             
         } catch (error) {
-            console.error('创建PDF导出表格失败:', error);
-            this.showMessage(`创建表格失败: ${error.message}`, 'danger');
+            console.error('PDF导出失败:', error);
+            this.showMessage(`PDF导出失败: ${error.message}`, 'danger');
         }
     }
 
@@ -1636,83 +1664,9 @@ class UnifiedInterfaceManager {
             
             console.log('图片数据生成成功，大小:', imgData.length);
             
-            const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
-            
-            // 设置PDF元数据
-            pdf.setProperties({
-                title: `Order Information - ${this.getPlatformName(this.currentPlatform)}`,
-                subject: 'Smart Address Order Management System Export',
-                author: 'Smart Address Order Management System',
-                creator: 'Unified Interface',
-                producer: 'jsPDF',
-                keywords: `order,management,${this.getPlatformName(this.currentPlatform)},address`,
-                creationDate: new Date()
-            });
-            
-            const pageWidth = pdf.internal.pageSize.getWidth();
-            const pageHeight = pdf.internal.pageSize.getHeight();
-            const margin = 15;
-            const contentWidth = pageWidth - (margin * 2);
-            const imgWidth = contentWidth;
-            const imgHeight = (canvas.height * imgWidth) / canvas.width;
-            
-            let position = margin;
-            
-            // 创建页眉区域
-            const headerHeight = 20;
-            
-            // 添加标题
-            pdf.setFontSize(16);
-            pdf.setFont('helvetica', 'bold');
-            const title = `${this.getPlatformName(this.currentPlatform)} Orders`;
-            const titleWidth = pdf.getTextWidth(title);
-            pdf.text(title, (pageWidth - titleWidth) / 2, position + 5);
-            
-            pdf.setFontSize(10);
-            pdf.setFont('helvetica', 'normal');
-            const exportInfo = `Export: ${new Date().toLocaleDateString()} | Total: ${this.finalData.length} items`;
-            const infoWidth = pdf.getTextWidth(exportInfo);
-            pdf.text(exportInfo, (pageWidth - infoWidth) / 2, position + 12);
-            
-            // 添加分隔线
-            pdf.setLineWidth(0.3);
-            pdf.line(margin, position + 15, pageWidth - margin, position + 15);
-            
-            position += headerHeight;
-            
-            // 添加图片
-            try {
-                pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
-                console.log('图片已添加到PDF');
-            } catch (imageError) {
-                console.error('添加图片到PDF失败:', imageError);
-                throw new Error('无法将图像添加到PDF');
-            }
-            
-            // 添加页脚
-            const totalPages = pdf.internal.getNumberOfPages();
-            for (let i = 1; i <= totalPages; i++) {
-                pdf.setPage(i);
-                pdf.setFontSize(8);
-                pdf.setFont('helvetica', 'normal');
-                
-                // 页码
-                const pageInfo = `Page ${i} of ${totalPages}`;
-                pdf.text(pageInfo, margin, pageHeight - margin + 5);
-                
-                // 时间戳
-                const timestamp = this.getFormattedTimestamp();
-                const timestampWidth = pdf.getTextWidth(timestamp);
-                pdf.text(timestamp, pageWidth - margin - timestampWidth, pageHeight - margin + 5);
-            }
-            
-            // 下载PDF
-            const filename = `${this.getPlatformName(this.currentPlatform)}_Orders_${this.getFormattedTimestamp()}.pdf`;
-            pdf.save(filename);
-            
-            console.log('PDF保存完成:', filename);
-            this.showMessage('PDF已导出成功', 'success');
-            cleanup && cleanup();
+            // 使用图片切割分页的方式生成PDF
+            console.log('开始使用图片切割方式生成PDF，保留中文字符');
+            this.generatePdfWithImageSlicing(imgData, canvas, cleanup);
             
         }).catch(error => {
             console.error('PDF导出失败:', error);
@@ -1733,7 +1687,7 @@ class UnifiedInterfaceManager {
     }
 
     /**
-     * 生成PDF（旧版本，保持兼容性）
+     * 生成PDF（简化版本，用于备用）
      */
     generatePdf() {
         const tableContainer = document.getElementById('table-container');
@@ -1743,6 +1697,360 @@ class UnifiedInterfaceManager {
         }
         
         this.generatePdfFromContainer(tableContainer);
+    }
+
+    /**
+     * 使用图片切割生成分页PDF
+     */
+    generatePdfWithImageSlicing(imgData, canvas, cleanup) {
+        try {
+            const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
+            
+            // 设置PDF元数据
+            pdf.setProperties({
+                title: 'Order Information',
+                subject: 'Order Export',
+                author: 'Order Management System',
+                creationDate: new Date()
+            });
+
+            // 页面设置
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+            const margin = 10;
+            const contentWidth = pageWidth - (margin * 2);
+            const contentHeight = pageHeight - (margin * 2);
+            
+            // 计算图片的实际显示尺寸
+            const imgAspectRatio = canvas.width / canvas.height;
+            const imgDisplayWidth = contentWidth;
+            const imgDisplayHeight = contentWidth / imgAspectRatio;
+            
+            console.log('图片切割信息:', {
+                canvasSize: { width: canvas.width, height: canvas.height },
+                imgDisplaySize: { width: imgDisplayWidth, height: imgDisplayHeight },
+                pageContentHeight: contentHeight
+            });
+
+            // 智能分页 - 尝试估算表格行高来避免切断行
+            const estimatedRowHeight = Math.max(20, canvas.height / Math.max(this.finalData.length, 1)); // 估算每行高度
+            const rowsPerPage = Math.floor(contentHeight * (canvas.height / imgDisplayHeight) / estimatedRowHeight);
+            const totalDataRows = this.finalData.length;
+            const pagesNeeded = Math.ceil(totalDataRows / Math.max(rowsPerPage, 1));
+            
+            console.log('智能分页计算:', {
+                estimatedRowHeight,
+                rowsPerPage,
+                totalDataRows,
+                pagesNeeded,
+                imgDisplayHeight,
+                contentHeight
+            });
+
+            // 为每一页切割图片
+            for (let pageIndex = 0; pageIndex < pagesNeeded; pageIndex++) {
+                if (pageIndex > 0) {
+                    pdf.addPage();
+                }
+
+                // 基于行数计算切割位置，但不超过内容高度限制
+                const startRow = pageIndex * rowsPerPage;
+                const endRow = Math.min(startRow + rowsPerPage, totalDataRows);
+                
+                // 计算切割区域（包含表头和适当的边距）
+                const headerHeight = estimatedRowHeight * 0.5; // 表头高度
+                const sliceTop = pageIndex === 0 ? 0 : (pageIndex * contentHeight);
+                const sliceHeight = Math.min(contentHeight, imgDisplayHeight - sliceTop);
+                
+                // 计算在原图上的像素位置
+                const pixelSliceTop = (sliceTop / imgDisplayHeight) * canvas.height;
+                const pixelSliceHeight = (sliceHeight / imgDisplayHeight) * canvas.height;
+                
+                console.log(`第 ${pageIndex + 1} 页切割信息:`, {
+                    sliceTop,
+                    sliceHeight,
+                    pixelSliceTop,
+                    pixelSliceHeight
+                });
+
+                // 创建临时canvas来切割图片
+                const sliceCanvas = document.createElement('canvas');
+                sliceCanvas.width = canvas.width;
+                sliceCanvas.height = pixelSliceHeight;
+                const sliceCtx = sliceCanvas.getContext('2d');
+                
+                // 绘制切割的部分
+                sliceCtx.drawImage(
+                    canvas,
+                    0, pixelSliceTop,           // 源图片的起始位置
+                    canvas.width, pixelSliceHeight,  // 源图片的切割尺寸
+                    0, 0,                       // 目标canvas的起始位置
+                    canvas.width, pixelSliceHeight   // 目标canvas的尺寸
+                );
+
+                // 将切割的图片转换为dataURL
+                const sliceImgData = sliceCanvas.toDataURL('image/png');
+                
+                // 将切割的图片添加到PDF
+                pdf.addImage(
+                    sliceImgData, 
+                    'PNG', 
+                    margin, 
+                    margin, 
+                    imgDisplayWidth, 
+                    sliceHeight
+                );
+
+                // 添加页码
+                pdf.setFontSize(8);
+                pdf.setTextColor(128, 128, 128);
+                const pageInfo = `Page ${pageIndex + 1} of ${pagesNeeded}`;
+                const pageInfoWidth = pdf.getTextWidth(pageInfo);
+                pdf.text(pageInfo, pageWidth - margin - pageInfoWidth, pageHeight - 5);
+            }
+
+            // 下载PDF
+            const filename = `${this.getPlatformName(this.currentPlatform)}_Orders_${this.getFormattedTimestamp()}.pdf`;
+            pdf.save(filename);
+            
+            console.log('分页PDF保存完成:', filename);
+            this.showMessage('PDF已导出成功', 'success');
+            cleanup && cleanup();
+            
+        } catch (error) {
+            console.error('图片切割PDF生成失败:', error);
+            this.showMessage(`PDF生成失败: ${error.message}`, 'danger');
+            cleanup && cleanup();
+        }
+    }
+
+    /**
+     * 生成分页PDF表格（备用方法）
+     */
+    generatePdfWithTable(cleanup) {
+        try {
+            const pdf = new jspdf.jsPDF({
+                orientation: 'p',
+                unit: 'mm',
+                format: 'a4',
+                putOnlyUsedFonts: true,
+                floatPrecision: 16
+            });
+            
+            // 设置PDF元数据
+            pdf.setProperties({
+                title: 'Order Information',
+                subject: 'Order Export',
+                author: 'Order Management System',
+                creationDate: new Date()
+            });
+            
+            // 设置默认字体
+            pdf.setFont('helvetica');
+
+            // 页面设置
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+            const margin = 15;
+            const contentWidth = pageWidth - (margin * 2);
+            
+            // 准备表格数据（使用英文标题避免乱码）
+            const headers = ['No.', 'Recipient', 'Order Info'];
+            const data = [];
+            
+            this.finalData.forEach((item, index) => {
+                const recipient = this.extractRecipientInfo(item);
+                const orderInfo = item.orderInfo && item.orderInfo.trim() !== '' ? item.orderInfo : 'No order info';
+                
+                // 将中文内容转换为拼音或保持原格式
+                data.push([
+                    String(index + 1).padStart(3, '0'),
+                    this.convertToDisplayFormat(recipient),
+                    this.convertToDisplayFormat(orderInfo)
+                ]);
+            });
+
+            let y = margin + 10;  // 起始Y位置
+
+            // 绘制标题（使用英文）
+            pdf.setFontSize(16);
+            pdf.setFont('helvetica', 'bold');
+            const platformName = this.getPlatformName(this.currentPlatform);
+            const title = `${platformName} Orders Export`;
+            const titleWidth = pdf.getTextWidth(title);
+            pdf.text(title, (pageWidth - titleWidth) / 2, y);
+            y += 10;
+
+            // 绘制导出信息（使用英文）
+            pdf.setFontSize(10);
+            pdf.setFont('helvetica', 'normal');
+            const exportDate = new Date().toLocaleDateString('en-US');
+            const exportTime = new Date().toLocaleTimeString('en-US');
+            const exportInfo = `Export: ${exportDate} ${exportTime} | Total: ${this.finalData.length} orders`;
+            const infoWidth = pdf.getTextWidth(exportInfo);
+            pdf.text(exportInfo, (pageWidth - infoWidth) / 2, y);
+            y += 15;
+
+            // 表格设置
+            const rowHeight = 15;
+            const colWidths = [20, 60, 100];  // 列宽
+            const headerHeight = 12;
+            
+            let currentPage = 1;
+            let rowsPerPage = Math.floor((pageHeight - y - margin) / rowHeight) - 1; // 减1为页脚留空间
+            
+            for (let i = 0; i < data.length; i++) {
+                // 检查是否需要新页面
+                if (i > 0 && i % rowsPerPage === 0) {
+                    // 添加页脚
+                    pdf.setFontSize(8);
+                    pdf.text(`Page ${currentPage}`, margin, pageHeight - 10);
+                    
+                    // 新页面
+                    pdf.addPage();
+                    currentPage++;
+                    y = margin + 10;
+                    
+                    // 在新页面重绘表头
+                    this.drawTableHeader(pdf, headers, y, margin, colWidths, headerHeight);
+                    y += headerHeight + 2;
+                } else if (i === 0) {
+                    // 第一页绘制表头
+                    this.drawTableHeader(pdf, headers, y, margin, colWidths, headerHeight);
+                    y += headerHeight + 2;
+                }
+
+                // 绘制数据行
+                this.drawTableRow(pdf, data[i], y, margin, colWidths, rowHeight, i % 2 === 0);
+                y += rowHeight;
+            }
+
+            // 最后一页的页脚
+            pdf.setFontSize(8);
+            pdf.text(`Page ${currentPage}`, margin, pageHeight - 10);
+
+            // 下载PDF
+            const filename = `${this.getPlatformName(this.currentPlatform)}_Orders_${this.getFormattedTimestamp()}.pdf`;
+            pdf.save(filename);
+            
+            console.log('PDF保存完成:', filename);
+            this.showMessage('PDF已导出成功', 'success');
+            cleanup && cleanup();
+            
+        } catch (error) {
+            console.error('PDF表格生成失败:', error);
+            this.showMessage(`PDF生成失败: ${error.message}`, 'danger');
+            cleanup && cleanup();
+        }
+    }
+
+    /**
+     * 转换中文内容为PDF可显示格式
+     */
+    convertToDisplayFormat(text) {
+        if (!text) return '';
+        
+        try {
+            // 尝试保留数字、英文字母、方括号和基本符号
+            let result = text.toString();
+            
+            // 保留常见的非中文字符
+            const preserveChars = /[a-zA-Z0-9\[\]\(\)\-\+\s\.\,\!\?\:\;]/g;
+            let preserved = result.match(preserveChars) || [];
+            
+            // 如果包含很多中文字符，尝试简化显示
+            const chineseChars = result.match(/[\u4e00-\u9fa5]/g);
+            if (chineseChars && chineseChars.length > 2) {
+                // 保留数字和符号，中文用简化格式
+                const numbers = result.match(/\d+/g) || [];
+                const brackets = result.match(/\[[^\]]*\]/g) || [];
+                
+                if (brackets.length > 0) {
+                    // 如果有方括号格式，保留这部分
+                    return brackets.join(' ');
+                } else if (numbers.length > 0) {
+                    // 否则显示数字部分
+                    return `Item-${numbers.join('-')}`;
+                } else {
+                    // 都没有则显示简化格式
+                    return `Order-${Math.random().toString(36).substr(2, 4)}`;
+                }
+            }
+            
+            // 如果中文字符不多，直接返回原文本（可能有部分显示）
+            return result;
+            
+        } catch (error) {
+            console.warn('字符转换失败:', error);
+            return text.toString();
+        }
+    }
+
+    /**
+     * 绘制表格头部
+     */
+    drawTableHeader(pdf, headers, y, x, colWidths, height) {
+        pdf.setFillColor(231, 76, 60);  // 拼多多橙红色
+        pdf.setTextColor(255, 255, 255);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(12);
+
+        let currentX = x;
+        headers.forEach((header, index) => {
+            pdf.rect(currentX, y, colWidths[index], height, 'F');
+            pdf.rect(currentX, y, colWidths[index], height, 'S');
+            
+            // 文字居中
+            const textWidth = pdf.getTextWidth(header);
+            const textX = currentX + (colWidths[index] - textWidth) / 2;
+            const textY = y + height / 2 + 2;
+            pdf.text(header, textX, textY);
+            
+            currentX += colWidths[index];
+        });
+    }
+
+    /**
+     * 绘制表格数据行
+     */
+    drawTableRow(pdf, rowData, y, x, colWidths, height, isEven) {
+        // 设置行背景颜色
+        if (isEven) {
+            pdf.setFillColor(250, 251, 252);
+            let currentX = x;
+            colWidths.forEach(width => {
+                pdf.rect(currentX, y, width, height, 'F');
+                currentX += width;
+            });
+        }
+
+        pdf.setTextColor(0, 0, 0);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(10);
+
+        let currentX = x;
+        rowData.forEach((cellData, index) => {
+            // 绘制边框
+            pdf.rect(currentX, y, colWidths[index], height, 'S');
+            
+            // 处理文字换行
+            const cellText = String(cellData);
+            const maxWidth = colWidths[index] - 4; // 留2mm内边距
+            
+            if (index === 0) {
+                // 序号居中
+                const textWidth = pdf.getTextWidth(cellText);
+                const textX = currentX + (colWidths[index] - textWidth) / 2;
+                pdf.text(cellText, textX, y + height / 2 + 2);
+            } else {
+                // 其他列左对齐，支持换行
+                const lines = pdf.splitTextToSize(cellText, maxWidth);
+                const textY = y + height / 2 + 2 - (lines.length - 1) * 2;
+                pdf.text(lines, currentX + 2, textY);
+            }
+            
+            currentX += colWidths[index];
+        });
     }
 
     /**
